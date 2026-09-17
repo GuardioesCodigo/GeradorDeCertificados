@@ -1,7 +1,7 @@
 using System;
 using GeradorCertificado.Dominio.Compartilhado;
 
-namespace GeradorCertificado.Dominio.Modulos.Curso;
+namespace GeradorCertificado.Dominio.Modulos.Cursos;
 
 public sealed class Curso : EntidadeBase<Curso>
 {
