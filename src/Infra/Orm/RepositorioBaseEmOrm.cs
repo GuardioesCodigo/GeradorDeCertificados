@@ -1,18 +1,22 @@
-using System;
 using GeradorCertificado.Dominio.Compartilhado;
 using Microsoft.EntityFrameworkCore;
 
 namespace GeradorCertificado.Infra.Orm;
 
-public abstract class RepositorioBaseEmOrm<T>(GeradorCertificadoDbContext dbContext) where T : EntidadeBase<T>
+public abstract class RepositorioBaseEmOrm<T>(
+    GeradorCertificadoDbContext dbContext
+) where T : EntidadeBase<T>
 {
-   protected readonly DbSet<T> registros = dbContext.Set<T>();
+    protected readonly DbSet<T> registros = dbContext.Set<T>();
 
-    public async Task CadastrarAsync(T entidade, CancellationToken cancellationToken = default)
+    public async Task CadastrarAsync(
+        T entidade,
+        CancellationToken cancellationToken = default
+    )
     {
         registros.Add(entidade);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await SalvarAlteracoesAsync(cancellationToken);
     }
 
     public async Task<bool> EditarAsync(
@@ -21,39 +25,69 @@ public abstract class RepositorioBaseEmOrm<T>(GeradorCertificadoDbContext dbCont
         CancellationToken cancellationToken = default
     )
     {
-        T? registroSelecionado = await SelecionarPorId(id);
+        T? registroSelecionado = await SelecionarPorIdAsync(id, cancellationToken);
 
         if (registroSelecionado == null)
             return false;
 
         registroSelecionado.Atualizar(entidadeAtualizada);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await SalvarAlteracoesAsync(cancellationToken);
 
         return true;
     }
 
-    public async Task<bool> Excluir(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> ExcluirAsync(
+        Guid id,
+        CancellationToken cancellationToken = default
+    )
     {
-        T? TSelecionado = await SelecionarPorId(id);
+        T? registroSelecionado = await SelecionarPorIdAsync(id, cancellationToken);
 
-        if (TSelecionado == null)
+        if (registroSelecionado == null)
             return false;
 
-        registros.Remove(TSelecionado);
+        registros.Remove(registroSelecionado);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await SalvarAlteracoesAsync(cancellationToken);
 
         return true;
     }
 
-    public virtual async Task<T?> SelecionarPorId(Guid idSelecionado)
+    public virtual async Task<T?> SelecionarPorIdAsync(
+        Guid idSelecionado,
+        CancellationToken cancellationToken = default
+    )
     {
-        return await registros.SingleOrDefaultAsync(c => c.Id == idSelecionado);
+        return await registros.SingleOrDefaultAsync(
+            c => c.Id == idSelecionado,
+            cancellationToken
+        );
     }
 
-    public virtual async Task<List<T>> SelecionarTodosAsync()
+    public virtual async Task<List<T>> SelecionarTodosAsync(
+        CancellationToken cancellationToken = default
+    )
     {
-        return await registros.ToListAsync();
+        return await registros.ToListAsync(cancellationToken);
+    }
+
+    protected async Task SalvarAlteracoesAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex)
+        {
+            dbContext.ChangeTracker.Clear();
+
+            throw new ConflitoDePersistenciaException(
+                "Ocorreu um erro ao persistir os dados.",
+                ex
+            );
+        }
     }
 }

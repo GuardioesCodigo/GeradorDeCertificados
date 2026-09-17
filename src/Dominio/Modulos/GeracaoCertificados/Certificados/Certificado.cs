@@ -8,18 +8,20 @@ public sealed class Certificado : EntidadeBase<Certificado>
 {
     public string NomeAluno { get; private set; } = string.Empty;
     public StatusCertificado Status { get; private set; }
+    public Guid SolicitacaoCertificadoId { get; private set; }
     public string? CaminhoArquivo { get; private set; }
     public DateTime? DataGeracao { get; private set; }
 
     public Certificado() {}
 
-    public Certificado(Guid id, string nomeAluno, StatusCertificado status, string? caminhoArquivo, DateTime? dataGeracao)
+    public Certificado(Guid id, string nomeAluno, StatusCertificado status, string? caminhoArquivo, DateTime? dataGeracao, Guid solicitacaoCertificadoId)
     {
         Id = id;
         NomeAluno = nomeAluno;
         Status = status;
         CaminhoArquivo = caminhoArquivo;
         DataGeracao = dataGeracao;
+        SolicitacaoCertificadoId = solicitacaoCertificadoId;
     }
 
     public override IReadOnlyList<ErroValidacao> Validar()

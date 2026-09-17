@@ -7,6 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Modulos\" />
+    <Folder Include="Modulos\Curso\" />
+    <Folder Include="Modulos\GeracaoCertificados\" />
     <Folder Include="Orm\" />
     <Folder Include="Orm\Migrations\" />
   </ItemGroup>
