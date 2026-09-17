@@ -1,5 +1,7 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Api/GeradorCertificado.Api.csproj" />
+    <Project Path="src/Aplicacao/GeradorCertificado.Aplicacao.csproj" />
     <Project Path="src/Dominio/GeradorCertificado.Dominio.csproj" />
     <Project Path="src/Infra/GeradorCertificado.Infra.csproj" />
   </Folder>
