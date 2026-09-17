@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <Folder Include="Compartilhado\" />
+    <Folder Include="Modulos\Curso\" />
   </ItemGroup>
 
 </Project>
