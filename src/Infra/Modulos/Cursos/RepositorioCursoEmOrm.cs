@@ -1,6 +1,6 @@
 using CursoEntidade = GeradorCertificado.Dominio.Modulos.Curso.Curso;
 using GeradorCertificado.Dominio.Modulos.Curso;
-using GeradorCertificado.Infra.Orm;
+using GeradorCertificado.Infra.Compartilhado.Orm;
 
 namespace GeradorCertificado.Infra.Modulos.Curso;
 

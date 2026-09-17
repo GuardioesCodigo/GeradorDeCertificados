@@ -1,5 +1,5 @@
 using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Certificados;
-using GeradorCertificado.Infra.Orm;
+using GeradorCertificado.Infra.Compartilhado.Orm;
 using Microsoft.EntityFrameworkCore;
 
 namespace GeradorCertificado.Infra.Modulos.GeracaoCertificados.Certificados;

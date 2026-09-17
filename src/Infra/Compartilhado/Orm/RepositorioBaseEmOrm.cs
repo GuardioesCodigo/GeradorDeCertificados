@@ -1,7 +1,7 @@
 using GeradorCertificado.Dominio.Compartilhado;
 using Microsoft.EntityFrameworkCore;
 
-namespace GeradorCertificado.Infra.Orm;
+namespace GeradorCertificado.Infra.Compartilhado.Orm;
 
 public abstract class RepositorioBaseEmOrm<T>(
     GeradorCertificadoDbContext dbContext

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 using GeradorCertificado.Api.Compartilhado.Auth;
 using GeradorCertificado.Api.Compartilhado.Http;
 using GeradorCertificado.Api.Compartilhado.Logging;
-using GeradorCertificado.Infra.Orm;
+using GeradorCertificado.Infra.Compartilhado.Orm;
 using GeradorCertificado.Infra;
 using GeradorCertificado.Aplicacao;
 using Microsoft.AspNetCore.Authentication.JwtBearer;

@@ -1,4 +1,4 @@
-using GeradorCertificado.Infra.Orm;
+using GeradorCertificado.Infra.Compartilhado.Orm;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

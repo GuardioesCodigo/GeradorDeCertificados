@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace GeradorCertificado.Infra.Orm;
+namespace GeradorCertificado.Infra.Compartilhado.Orm;
 
 
 
