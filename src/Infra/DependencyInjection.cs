@@ -1,4 +1,6 @@
+using GeradorCertificado.Dominio.Modulos.Cursos;
 using GeradorCertificado.Infra.Compartilhado.Orm;
+using GeradorCertificado.Infra.Modulos.Cursos;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -13,6 +15,8 @@ public static void AddInfrastructureServices(
         IConfiguration configuration
     )
     {
+        services.AddScoped<IRepositorioCurso, RepositorioCursoEmOrm>();
+
         // services.AddDataProtection();
         // services.AddIdentityCore<IdentityUser<Guid>>(options =>
         // {
