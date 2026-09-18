@@ -1,3 +1,4 @@
+using GeradorCertificado.Dominio.Modulos.Cursos;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -19,16 +20,18 @@ public sealed class GeradorCertificadoDbContext(
     // IProvedorDeUsuario? provedorDeUsuario = null
 ) : IdentityDbContext<IdentityUser<Guid>, IdentityRole<Guid>, Guid>(options)
 {
-    // protected override void OnModelCreating(ModelBuilder modelBuilder)
-    // {
-    //     base.OnModelCreating(modelBuilder);
+    public DbSet<Curso> Cursos => Set<Curso>();
 
-    //     modelBuilder.ApplyConfigurationsFromAssembly(typeof(GeradorCertificadoDbContext).Assembly);
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
 
-    //     if (provedorDeUsuario is not null)
-    //     {
-    //     }
-    // }
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(GeradorCertificadoDbContext).Assembly);
+
+        // if (provedorDeUsuario is not null)
+        // {
+        // }
+    }
 
     // public override int SaveChanges()
     // {
