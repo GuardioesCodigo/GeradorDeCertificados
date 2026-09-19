@@ -1,6 +1,12 @@
+using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Servicos;
 using GeradorCertificado.Dominio.Modulos.Cursos;
+using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Certificados;
+using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.SolicitacaoCertificados;
 using GeradorCertificado.Infra.Compartilhado.Orm;
 using GeradorCertificado.Infra.Modulos.Cursos;
+using GeradorCertificado.Infra.Modulos.GeracaoCertificados.Certificados;
+using GeradorCertificado.Infra.Modulos.GeracaoCertificados.Servicos;
+using GeradorCertificado.Infra.Modulos.GeracaoCertificados.SolicitacaoCertificados;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -16,6 +22,11 @@ public static void AddInfrastructureServices(
     )
     {
         services.AddScoped<IRepositorioCurso, RepositorioCursoEmOrm>();
+        services.AddScoped<IRepositorioCertificado, RepositorioCertificadoEmOrm>();
+        services.AddScoped<IRepositorioSolicitacaoCertificado, RepositorioSolicitacaoCertificadoEmOrm>();
+
+        services.AddSingleton<IGeradorDeCertificadoPdf, GeradorDeCertificadoPdfComQuestPdf>();
+        services.AddSingleton<IArmazenamentoDeArquivos, ArmazenamentoDeArquivosEmDisco>();
 
         // services.AddDataProtection();
         // services.AddIdentityCore<IdentityUser<Guid>>(options =>

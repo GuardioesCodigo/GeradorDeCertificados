@@ -1,4 +1,6 @@
 using GeradorCertificado.Dominio.Modulos.Cursos;
+using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Certificados;
+using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.SolicitacaoCertificados;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +23,8 @@ public sealed class GeradorCertificadoDbContext(
 ) : IdentityDbContext<IdentityUser<Guid>, IdentityRole<Guid>, Guid>(options)
 {
     public DbSet<Curso> Cursos => Set<Curso>();
+    public DbSet<SolicitacaoCertificado> SolicitacoesCertificados => Set<SolicitacaoCertificado>();
+    public DbSet<Certificado> Certificados => Set<Certificado>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
