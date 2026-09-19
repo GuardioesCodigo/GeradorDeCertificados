@@ -48,6 +48,7 @@ namespace GeradorCertificado.Infra.Migrations
                     b.ToTable("TBCursos", (string)null);
                 });
 
+<<<<<<< HEAD
             modelBuilder.Entity("GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Certificados.Certificado", b =>
                 {
                     b.Property<Guid>("Id")
@@ -105,6 +106,8 @@ namespace GeradorCertificado.Infra.Migrations
                     b.ToTable("TBSolicitacoesCertificados", (string)null);
                 });
 
+=======
+>>>>>>> 89ae398139d0afb31c19d8845662992630a83fe0
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
                 {
                     b.Property<Guid>("Id")
@@ -300,6 +303,7 @@ namespace GeradorCertificado.Infra.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+<<<<<<< HEAD
             modelBuilder.Entity("GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Certificados.Certificado", b =>
                 {
                     b.HasOne("GeradorCertificado.Dominio.Modulos.GeracaoCertificados.SolicitacaoCertificados.SolicitacaoCertificado", null)
@@ -309,6 +313,8 @@ namespace GeradorCertificado.Infra.Migrations
                         .IsRequired();
                 });
 
+=======
+>>>>>>> 89ae398139d0afb31c19d8845662992630a83fe0
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -359,11 +365,14 @@ namespace GeradorCertificado.Infra.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
+<<<<<<< HEAD
 
             modelBuilder.Entity("GeradorCertificado.Dominio.Modulos.GeracaoCertificados.SolicitacaoCertificados.SolicitacaoCertificado", b =>
                 {
                     b.Navigation("Certificados");
                 });
+=======
+>>>>>>> 89ae398139d0afb31c19d8845662992630a83fe0
 #pragma warning restore 612, 618
         }
     }
