@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.ConstrainedExecution;
 using GeradorCertificado.Dominio.Compartilhado;
 
 namespace GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Certificados;
@@ -43,6 +42,20 @@ public sealed class Certificado : EntidadeBase<Certificado>
         Status = entidadeAtualizada.Status;
         CaminhoArquivo = entidadeAtualizada.CaminhoArquivo;
         DataGeracao = entidadeAtualizada.DataGeracao;
+    }
+
+    public void MarcarComoGerado(string caminhoArquivo, DateTime dataGeracao)
+    {
+        Status = StatusCertificado.Gerado;
+        CaminhoArquivo = caminhoArquivo;
+        DataGeracao = dataGeracao;
+    }
+
+    public void MarcarComoFalha()
+    {
+        Status = StatusCertificado.Falha;
+        CaminhoArquivo = null;
+        DataGeracao = null;
     }
 
 }

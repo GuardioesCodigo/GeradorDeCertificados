@@ -9,11 +9,13 @@ public sealed class SolicitacaoCertificado : EntidadeBase<SolicitacaoCertificado
     public List<Certificado> Certificados { get; private set; } = [];
     public StatusSolicitacao StatusSolicitacao { get; private set; }
     public DateTime DataSolicitacao { get; private set; } = DateTime.Now;
+    public string? CaminhoZip { get; private set; }
 
     private SolicitacaoCertificado() { }
 
-    public SolicitacaoCertificado(Guid cursoId, List<Certificado> certificados)
+    public SolicitacaoCertificado(Guid id, Guid cursoId, List<Certificado> certificados)
     {
+        Id = id;
         CursoId = cursoId;
         Certificados = certificados;
         StatusSolicitacao = StatusSolicitacao.Pendente;
@@ -38,5 +40,27 @@ public sealed class SolicitacaoCertificado : EntidadeBase<SolicitacaoCertificado
         Certificados = entidadeAtualizada.Certificados;
         StatusSolicitacao = entidadeAtualizada.StatusSolicitacao;
         DataSolicitacao = entidadeAtualizada.DataSolicitacao;
+        CaminhoZip = entidadeAtualizada.CaminhoZip;
+    }
+
+    public void IniciarProcessamento()
+    {
+        StatusSolicitacao = StatusSolicitacao.GerandoCertificados;
+    }
+
+    public void IniciarGeracaoZip()
+    {
+        StatusSolicitacao = StatusSolicitacao.GerandoZip;
+    }
+
+    public void Concluir(string caminhoZip)
+    {
+        StatusSolicitacao = StatusSolicitacao.Concluido;
+        CaminhoZip = caminhoZip;
+    }
+
+    public void Falhar()
+    {
+        StatusSolicitacao = StatusSolicitacao.Falha;
     }
 }
