@@ -1,4 +1,4 @@
-namespace GeradorCertificado.Aplicacao.Modulos.GeracaoCertificados.Servicos;
+namespace GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Servicos;
 
 public interface IArmazenamentoDeArquivos
 {

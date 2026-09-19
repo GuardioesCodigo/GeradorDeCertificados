@@ -1,5 +1,5 @@
 using System.IO.Compression;
-using GeradorCertificado.Aplicacao.Modulos.GeracaoCertificados.Servicos;
+using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Servicos;
 using GeradorCertificado.Dominio.Modulos.Cursos;
 using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Certificados;
 using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.SolicitacaoCertificados;
