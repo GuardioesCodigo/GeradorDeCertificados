@@ -31,7 +31,7 @@ public static class LoggingExtensions
         string caminhoAppData = Environment
             .GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
-        string caminhoDiretorio = Path.Combine(caminhoAppData, "DeliveryApp");
+        string caminhoDiretorio = Path.Combine(caminhoAppData, "GeradorCertificado");
 
         Directory.CreateDirectory(caminhoDiretorio);
 

@@ -15,6 +15,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Configuração de opções de serviços
 builder.Services
+    .AddOptions<NewRelicOptions>()
+    .BindConfiguration(NewRelicOptions.SectionName);
+
+builder.Services
     .AddOptions<JwtOptions>()
     .BindConfiguration(JwtOptions.SectionName)
     .Validate(o => !string.IsNullOrWhiteSpace(o.Issuer))
