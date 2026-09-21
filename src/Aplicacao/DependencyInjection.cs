@@ -18,9 +18,6 @@ public static class DependencyInjection
             config.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly);
         });
 
-        var rabbitMqConnectionString = configuration.GetConnectionString("RabbitMq")
-            ?? throw new InvalidOperationException("A ConnectionString \"RabbitMq\" não foi configurada");
-
         services.AddMassTransit(config =>
         {
             config.SetKebabCaseEndpointNameFormatter();
@@ -28,19 +25,33 @@ public static class DependencyInjection
             // Configura a injeção dos Consumers
             config.AddConsumer<GerarCertificadosConsumer>();
 
-            config.UsingRabbitMq((context, rabbitMq) =>
+            if (configuration["Infra:MessageBrokerProvider"] == "InMemory")
             {
-                rabbitMq.Host(new Uri(rabbitMqConnectionString));
-
-                rabbitMq.ReceiveEndpoint("certificados-gerados", endpoint =>
+                // Usado nos testes de integração, para não depender de um RabbitMQ real.
+                config.UsingInMemory((context, inMemory) =>
                 {
-                    endpoint.PrefetchCount = 4; // Quantas mensagens o RabbitMQ deve carregar adiantado
-                    endpoint.ConcurrentMessageLimit = 2; // Quantos consumers serão instanciados em paralelo
-                    endpoint.UseMessageRetry(DefaultMessageRetryIntervals); // Quantas re-tentativas serão feitas e o intervalo entre elas
-
-                    endpoint.ConfigureConsumer<GerarCertificadosConsumer>(context);
+                    inMemory.ConfigureEndpoints(context);
                 });
-            });
+            }
+            else
+            {
+                var rabbitMqConnectionString = configuration.GetConnectionString("RabbitMq")
+                    ?? throw new InvalidOperationException("A ConnectionString \"RabbitMq\" não foi configurada");
+
+                config.UsingRabbitMq((context, rabbitMq) =>
+                {
+                    rabbitMq.Host(new Uri(rabbitMqConnectionString));
+
+                    rabbitMq.ReceiveEndpoint("certificados-gerados", endpoint =>
+                    {
+                        endpoint.PrefetchCount = 4; // Quantas mensagens o RabbitMQ deve carregar adiantado
+                        endpoint.ConcurrentMessageLimit = 2; // Quantos consumers serão instanciados em paralelo
+                        endpoint.UseMessageRetry(DefaultMessageRetryIntervals); // Quantas re-tentativas serão feitas e o intervalo entre elas
+
+                        endpoint.ConfigureConsumer<GerarCertificadosConsumer>(context);
+                    });
+                });
+            }
         });
 
         services.Configure<MassTransitHostOptions>(options =>
