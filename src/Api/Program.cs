@@ -96,18 +96,24 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
 {
     using var scope = app.Services.CreateScope();
 
     var dbContext = scope.ServiceProvider.GetRequiredService<GeradorCertificadoDbContext>();
 
-    dbContext.Database.Migrate();
+    if (builder.Configuration["Infra:DatabaseProvider"] == "InMemory")
+        dbContext.Database.EnsureCreated();
+    else
+        dbContext.Database.Migrate();
 
     await GeradorCertificado.Infra.Compartilhado.Auth.IdentitySeeder.SeedRolesAsync(scope.ServiceProvider);
 
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
 }
 
 app.UseExceptionHandler();
