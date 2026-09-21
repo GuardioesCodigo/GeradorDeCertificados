@@ -3,16 +3,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GeradorCertificado.Infra.Compartilhado.Orm;
 
-public abstract class RepositorioBaseEmOrm<T>(
-    GeradorCertificadoDbContext dbContext
-) where T : EntidadeBase<T>
+public abstract class RepositorioBaseEmOrm<T>(GeradorCertificadoDbContext dbContext) where T : EntidadeBase<T>
 {
     protected readonly DbSet<T> registros = dbContext.Set<T>();
 
-    public async Task CadastrarAsync(
-        T entidade,
-        CancellationToken cancellationToken = default
-    )
+    public async Task CadastrarAsync(T entidade, CancellationToken cancellationToken = default)
     {
         registros.Add(entidade);
 
@@ -37,10 +32,7 @@ public abstract class RepositorioBaseEmOrm<T>(
         return true;
     }
 
-    public async Task<bool> ExcluirAsync(
-        Guid id,
-        CancellationToken cancellationToken = default
-    )
+    public async Task<bool> ExcluirAsync(Guid id, CancellationToken cancellationToken = default)
     {
         T? registroSelecionado = await SelecionarPorIdAsync(id, cancellationToken);
 
@@ -59,10 +51,7 @@ public abstract class RepositorioBaseEmOrm<T>(
         CancellationToken cancellationToken = default
     )
     {
-        return await registros.SingleOrDefaultAsync(
-            c => c.Id == idSelecionado,
-            cancellationToken
-        );
+        return await registros.SingleOrDefaultAsync(c => c.Id == idSelecionado, cancellationToken);
     }
 
     public virtual async Task<List<T>> SelecionarTodosAsync(
@@ -72,9 +61,7 @@ public abstract class RepositorioBaseEmOrm<T>(
         return await registros.ToListAsync(cancellationToken);
     }
 
-    protected async Task SalvarAlteracoesAsync(
-        CancellationToken cancellationToken = default
-    )
+    protected async Task SalvarAlteracoesAsync(CancellationToken cancellationToken = default)
     {
         try
         {
