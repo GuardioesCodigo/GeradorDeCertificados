@@ -13,26 +13,20 @@ using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-
-
 // Autenticação irá ficar para o final do projeto
 
-
-
-
 // Configuração de opções de serviços
-// builder.Services
-//     .AddOptions<JwtOptions>()
-//     .BindConfiguration(JwtOptions.SectionName)
-//     .Validate(o => !string.IsNullOrWhiteSpace(o.Issuer))
-//     .Validate(o => !string.IsNullOrWhiteSpace(o.Audience))
-//     .Validate(o => !string.IsNullOrWhiteSpace(o.Key))
-//     .ValidateOnStart();
+builder.Services
+    .AddOptions<JwtOptions>()
+    .BindConfiguration(JwtOptions.SectionName)
+    .Validate(o => !string.IsNullOrWhiteSpace(o.Issuer))
+    .Validate(o => !string.IsNullOrWhiteSpace(o.Audience))
+    .Validate(o => !string.IsNullOrWhiteSpace(o.Key))
+    .ValidateOnStart();
 
-// builder.Services
-//     .AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
-//     .Configure<IOptions<JwtOptions>>(JwtExtensions.ConfigureJwtBearerValidation);
+builder.Services
+    .AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+    .Configure<IOptions<JwtOptions>>(JwtExtensions.ConfigureJwtBearerValidation);
 
 // Configuração de serviços
 builder.Services.AddInfrastructureServices(builder.Configuration);
@@ -116,8 +110,8 @@ app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseHttpsRedirection();
 
-// app.UseAuthentication();
-// app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 
