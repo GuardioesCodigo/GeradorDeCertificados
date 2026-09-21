@@ -29,7 +29,7 @@ builder.Services
 // Configuração de serviços
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddApplicationServices(builder.Configuration);
-// builder.Services.AddJwtAuthServices();
+builder.Services.AddJwtAuthServices();
 builder.Services.AddSerilogServices(builder.Logging);
 
 builder.Services.AddControllers()
