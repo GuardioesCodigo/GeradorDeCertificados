@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace GeradorCertificado.Infra.Migrations
+namespace GeradorCertificado.Infra.Compartilhado.Orm.Migrations
 {
     [DbContext(typeof(GeradorCertificadoDbContext))]
     [Migration("20260919213445_InicialCompleto")]

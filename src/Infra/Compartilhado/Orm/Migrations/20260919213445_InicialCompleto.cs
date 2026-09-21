@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace GeradorCertificado.Infra.Migrations
+namespace GeradorCertificado.Infra.Compartilhado.Orm.Migrations
 {
     /// <inheritdoc />
     public partial class InicialCompleto : Migration

@@ -3,17 +3,20 @@ using System;
 using GeradorCertificado.Infra.Compartilhado.Orm;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace GeradorCertificado.Infra.Migrations
+namespace GeradorCertificado.Infra.Compartilhado.Orm.Migrations
 {
     [DbContext(typeof(GeradorCertificadoDbContext))]
-    partial class GeradorCertificadoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260918213531_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -48,66 +51,6 @@ namespace GeradorCertificado.Infra.Migrations
                     b.ToTable("TBCursos", (string)null);
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Certificados.Certificado", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("CaminhoArquivo")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<DateTime?>("DataGeracao")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("NomeAluno")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<Guid>("SolicitacaoCertificadoId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SolicitacaoCertificadoId");
-
-                    b.ToTable("TBCertificados", (string)null);
-                });
-
-            modelBuilder.Entity("GeradorCertificado.Dominio.Modulos.GeracaoCertificados.SolicitacaoCertificados.SolicitacaoCertificado", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("CaminhoZip")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<Guid>("CursoId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("DataSolicitacao")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("StatusSolicitacao")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TBSolicitacoesCertificados", (string)null);
-                });
-
-=======
->>>>>>> 89ae398139d0afb31c19d8845662992630a83fe0
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
                 {
                     b.Property<Guid>("Id")
@@ -303,18 +246,6 @@ namespace GeradorCertificado.Infra.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Certificados.Certificado", b =>
-                {
-                    b.HasOne("GeradorCertificado.Dominio.Modulos.GeracaoCertificados.SolicitacaoCertificados.SolicitacaoCertificado", null)
-                        .WithMany("Certificados")
-                        .HasForeignKey("SolicitacaoCertificadoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-=======
->>>>>>> 89ae398139d0afb31c19d8845662992630a83fe0
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -365,14 +296,6 @@ namespace GeradorCertificado.Infra.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
-<<<<<<< HEAD
-
-            modelBuilder.Entity("GeradorCertificado.Dominio.Modulos.GeracaoCertificados.SolicitacaoCertificados.SolicitacaoCertificado", b =>
-                {
-                    b.Navigation("Certificados");
-                });
-=======
->>>>>>> 89ae398139d0afb31c19d8845662992630a83fe0
 #pragma warning restore 612, 618
         }
     }
