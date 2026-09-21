@@ -1,20 +1,17 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using GeradorCertificado.Dominio.Auth;
 using GeradorCertificado.Dominio.Compartilhado.Auth;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace GeradorCertificado.Api.Compartilhado.Auth;
 
-public sealed record AccessTokenResponse(string AccessToken, DateTime DataExpiracaoEmUtc);
-
 public sealed class JwtProvider(IOptions<JwtOptions> jwtOptions)
 {
     private readonly JwtOptions options = jwtOptions.Value;
 
-    public AccessTokenResponse CriarToken(
+    public AccessToken CriarToken(
         Guid usuarioId,
         string email,
         TipoUsuario tipoUsuario
@@ -43,6 +40,6 @@ public sealed class JwtProvider(IOptions<JwtOptions> jwtOptions)
 
         string accessToken = new JwtSecurityTokenHandler().WriteToken(token);
 
-        return new AccessTokenResponse(accessToken, dataExpiracao);
+        return new AccessToken(accessToken, dataExpiracao);
     }
 }

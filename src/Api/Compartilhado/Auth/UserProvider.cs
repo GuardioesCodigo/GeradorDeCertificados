@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using GeradorCertificado.Dominio.Auth;
 using GeradorCertificado.Dominio.Compartilhado.Auth;
 
 namespace GeradorCertificado.Api.Compartilhado.Auth;
@@ -23,6 +22,15 @@ public sealed class UserProvider(IHttpContextAccessor httpContextAccessor) : IPr
             return id;
         }
     }
+    public bool PossuiTipo(TipoUsuario tipoUsuario)
+    {
+        ClaimsPrincipal? user = httpContextAccessor.HttpContext?.User;
+
+        return user?.Identity?.IsAuthenticated == true && user.IsInRole(tipoUsuario.ToString());
+    }
+
+    public string? Email => httpContextAccessor.HttpContext?.User
+        .FindFirstValue(ClaimTypes.Email);
 
     public bool EstaAutenticado => Id.HasValue;
 }

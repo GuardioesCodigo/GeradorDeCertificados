@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using System.Text;
-using GeradorCertificado.Dominio.Auth;
+using GeradorCertificado.Dominio.Compartilhado.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;

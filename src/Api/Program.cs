@@ -13,8 +13,6 @@ using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Autenticação irá ficar para o final do projeto
-
 // Configuração de opções de serviços
 builder.Services
     .AddOptions<JwtOptions>()
