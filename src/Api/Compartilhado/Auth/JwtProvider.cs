@@ -7,7 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace GeradorCertificado.Api.Compartilhado.Auth;
 
-public sealed class JwtProvider(IOptions<JwtOptions> jwtOptions)
+public sealed class JwtProvider(IOptions<JwtOptions> jwtOptions) : IEmissorDeTokens
 {
     private readonly JwtOptions options = jwtOptions.Value;
 

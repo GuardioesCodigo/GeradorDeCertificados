@@ -33,7 +33,7 @@ builder.Services
 // Configuração de serviços
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddApplicationServices(builder.Configuration);
-// builder.Services.AddJwtAuthServices();
+builder.Services.AddJwtAuthServices();
 builder.Services.AddSerilogServices(builder.Logging);
 
 builder.Services.AddControllers()
@@ -103,6 +103,8 @@ if (app.Environment.IsDevelopment())
     var dbContext = scope.ServiceProvider.GetRequiredService<GeradorCertificadoDbContext>();
 
     dbContext.Database.Migrate();
+
+    await GeradorCertificado.Infra.Compartilhado.Auth.IdentitySeeder.SeedRolesAsync(scope.ServiceProvider);
 
     app.UseSwagger();
     app.UseSwaggerUI();

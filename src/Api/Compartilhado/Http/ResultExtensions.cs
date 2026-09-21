@@ -35,6 +35,17 @@ public static class ResultExtensions
             );
         }
 
+        if (tipoErro.Equals(TipoErro.NaoAutorizado))
+        {
+            return CriarProblem(
+                controller,
+                StatusCodes.Status401Unauthorized,
+                mensagemErro,
+                "Não Autenticado",
+                ProblemDetailsTypes.Unauthorized
+            );
+        }
+
         if (tipoErro.Equals(TipoErro.Validacao))
         {
             var modelState = new ModelStateDictionary();

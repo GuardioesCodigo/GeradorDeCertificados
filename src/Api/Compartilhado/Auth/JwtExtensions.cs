@@ -14,7 +14,7 @@ namespace GeradorCertificado.Api.Compartilhado.Auth
         {
             services.AddHttpContextAccessor();
             services.AddScoped<IProvedorDeUsuario, UserProvider>();
-            services.AddSingleton<JwtProvider>();
+            services.AddSingleton<IEmissorDeTokens, JwtProvider>();
 
             services
                 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
