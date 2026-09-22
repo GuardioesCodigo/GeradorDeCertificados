@@ -22,6 +22,6 @@ public static class ErrosDeAutenticacao
     public static Error CredenciaisInvalidas()
     {
         return new Error("Email ou senha inválidos.")
-            .WithMetadata(nameof(TipoErro), TipoErro.NaoAutorizado);
+            .WithMetadata(nameof(TipoErro), TipoErro.NaoAutenticado);
     }
 }
