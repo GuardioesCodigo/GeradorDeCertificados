@@ -10,19 +10,17 @@ $projeto = "src/Api"
 
 Write-Host "Configurando User Secrets em $projeto..."
 
-$bytes = New-Object byte[] 48
-[System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
-$chaveJwt = [Convert]::ToBase64String($bytes)
-
-dotnet user-secrets set "Jwt:Key" "" --project "src/Api"
-
-dotnet user-secrets set "ConnectionStrings:PostgresEF" `
-  "Host=localhost;Port=5432;Database=GeradorCertificadoAppDb;Username=postgres;Password=postgres" `
-  --project 
+dotnet user-secrets set "ConnectionStrings:AzureSQL" `
+  "Server=localhost,1433;Database=GeradorCertificadoAppDb;User Id=sa;Password=SenhaForte#2026;TrustServerCertificate=True;" `
+  --project $projeto
 
 dotnet user-secrets set "ConnectionStrings:RabbitMq" `
   "amqp://guest:guest@localhost:5672" `
-  --project "src/Api"
+  --project $projeto
 
-Write-Host "Pronto. Para conferir os valores salvos:"
-Write-Host "  dotnet user-secrets list --project "src/Api"
+Write-Host "Pronto. Falta só a Jwt:Key, que este script deixa de propósito de fora"
+Write-Host "(cada dev deve ter a sua). Gere uma e configure com:"
+Write-Host '  dotnet user-secrets set "Jwt:Key" "<sua-chave>" --project src/Api'
+Write-Host ""
+Write-Host "Para conferir os valores salvos:"
+Write-Host "  dotnet user-secrets list --project $projeto"

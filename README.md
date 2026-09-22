@@ -13,7 +13,7 @@ Clean Architecture em 4 camadas, uma por projeto:
 src/
   Dominio/    entidades, regras de negócio e portas (interfaces) — não depende de mais nada
   Aplicacao/  casos de uso (Commands/Queries + Handlers via MediatR), FluentResults para erros
-  Infra/      EF Core (Postgres), Identity, QuestPDF, armazenamento em disco — implementa as portas do Dominio
+  Infra/      EF Core (SQL Server / Azure SQL), Identity, QuestPDF, armazenamento em disco — implementa as portas do Dominio
   Api/        controllers, autenticação JWT, ProblemDetails — só orquestra, sem regra de negócio
 ```
 
@@ -30,7 +30,7 @@ src/
 
 ## Rodando localmente
 
-### 1. Suba Postgres e RabbitMQ
+### 1. Suba SQL Server e RabbitMQ
 
 ```bash
 docker compose up -d
@@ -49,16 +49,26 @@ Nenhuma credencial fica no `appsettings.*.json` — tudo via
 .\scripts\setup-user-secrets.ps1
 ```
 
-Isso configura `Jwt:Key` (gerada aleatoriamente), `ConnectionStrings:PostgresEF` e
-`ConnectionStrings:RabbitMq` apontando para o `docker-compose.yml` acima. Para conferir/alterar um
-valor específico:
+Isso configura `ConnectionStrings:AzureSQL` e `ConnectionStrings:RabbitMq` apontando para o
+`docker-compose.yml` acima. A `Jwt:Key` fica de fora de propósito — gere a sua e configure
+manualmente (cada dev deve ter uma chave própria):
 
 ```bash
+dotnet user-secrets set "Jwt:Key" "$(openssl rand -base64 48)" --project src/Api
 dotnet user-secrets list --project src/Api
-dotnet user-secrets set "Jwt:Key" "outro-valor" --project src/Api
 ```
 
-### 3. Rode a API
+### 3. Gere e aplique a migration inicial
+
+O projeto migrou de PostgreSQL para SQL Server (Azure SQL) e ainda não tem nenhuma migration
+gerada para esse provider — veja `src/Infra/Compartilhado/Orm/Migrations/LEIA-ME.md`:
+
+```bash
+dotnet tool install --global dotnet-ef   # se ainda não tiver
+dotnet ef migrations add InicialSqlServer --project src/Infra --startup-project src/Api
+```
+
+### 4. Rode a API
 
 ```bash
 dotnet run --project src/Api
@@ -77,7 +87,7 @@ dotnet test
   camada de Aplicação, com repositórios/serviços mockados. Não precisa de banco nem de RabbitMQ.
 - **`tests/GeradorCertificado.IntegrationTests`** (MSTest + `WebApplicationFactory`): sobe a API
   inteira em memória (`TestServer`), com EF Core InMemory e o transporte in-memory do MassTransit
-  (`Infra:MessageBrokerProvider=InMemory`) — sem dependência de Postgres/RabbitMQ reais. Inclui um
+  (`Infra:MessageBrokerProvider=InMemory`) — sem dependência de SQL Server/RabbitMQ reais. Inclui um
   fluxo ponta a ponta (`FluxoCompletoE2ETests`) que passa por cadastro → login → criar curso →
   solicitar certificados → aguardar o processamento assíncrono real do consumer → baixar e validar
   o ZIP.
@@ -87,8 +97,8 @@ dotnet test
   > handler → banco → mensageria → consumer → armazenamento em disco), em vez de testes de
   > navegador com Playwright — que faz mais sentido para aplicações com UI.
 
-Nenhum dos dois projetos de teste toca no Postgres/RabbitMQ reais do `docker-compose.yml`; eles são
-totalmente isolados e podem rodar em qualquer máquina/CI sem nenhuma dependência externa.
+Nenhum dos dois projetos de teste toca no SQL Server/RabbitMQ reais do `docker-compose.yml`; eles
+são totalmente isolados e podem rodar em qualquer máquina/CI sem nenhuma dependência externa.
 
 ## Endpoints
 
@@ -105,14 +115,24 @@ totalmente isolados e podem rodar em qualquer máquina/CI sem nenhuma dependênc
 
 Detalhes de request/response e regras de negócio estão na especificação técnica do projeto.
 
-## Publicação (Azure + CloudAMQP)
+## Publicação (Azure App Service + Azure SQL + CloudAMQP)
 
-1. Provisione um Postgres (Azure Database for PostgreSQL) e um RabbitMQ (CloudAMQP).
-2. Configure `ConnectionStrings:PostgresEF`, `ConnectionStrings:RabbitMq` e `Jwt:Key` como
-   variáveis de ambiente/Application Settings no App Service (mesmas chaves dos User Secrets, com
-   `__` no lugar de `:` — ex. `ConnectionStrings__PostgresEF`).
-3. Rode `dotnet ef database update --project src/Infra --startup-project src/Api` (ou equivalente
-   no pipeline de CI/CD) para aplicar as migrations — em produção elas não rodam automaticamente no
-   boot (só em `Development`/`Testing`), assim como o seed do papel `Cliente`. Se preferir manter o
-   seed automático em produção também, isso é uma mudança pequena e intencionalmente deixada de
-   fora aqui: normalmente prefere-se controlar isso pelo pipeline, não pelo próprio processo web.
+O deploy é automatizado por `.github/workflows/main_gerador-de-certificados-2026.yml`, disparado a
+cada push na `main`: `test` (bloqueia tudo se algum teste falhar) → `build` → `migrate` (aplica as
+migrations no Azure SQL) → `deploy` (App Service).
+
+Secrets que o workflow espera no GitHub (`Settings` → `Secrets and variables` → `Actions`):
+
+| Secret | Uso |
+|---|---|
+| `AZURE_SQL_CONNECTION_STRING` | usada pelo job `migrate` para rodar `dotnet ef database update` |
+| `AZURESQL_CONNECTION_STRING` | configurada como `ConnectionStrings__AzureSQL` no App Service |
+| `RABBITMQ_CONNECTIONSTRING` | configurada como `ConnectionStrings__RabbitMq` |
+| `JWT_KEY` | configurada como `jwt__Key` |
+| `NEWRELIC_LICENSE_KEY` | configurada como `NewRelic__LicenseKey` |
+| `LUCKYPENNY_LICENSE_KEY` | configurada como `LuckyPenny__Licensekey` |
+| `AZUREAPPSERVICE_CLIENTID_...`, `AZUREAPPSERVICE_TENANTID_...`, `AZUREAPPSERVICE_SUBSCRIPTIONID_...` | login via OIDC (`azure/login@v2`) |
+
+`AZURE_SQL_CONNECTION_STRING` e `AZURESQL_CONNECTION_STRING` normalmente apontam para o mesmo
+banco — são dois secrets porque um é usado pela CLI do `dotnet ef` (formato ADO.NET puro) e o
+outro vira uma variável de ambiente do App Service.
