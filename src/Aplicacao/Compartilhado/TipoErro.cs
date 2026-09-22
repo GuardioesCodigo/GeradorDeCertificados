@@ -7,20 +7,20 @@ public enum TipoErro
     Validacao,
     NaoEncontrado,
     Conflito,
-<<<<<<< HEAD
-    NaoAutorizado
-=======
-    NaoAutenticado,
     NaoAutorizado,
+    NaoAutenticado
 }
 
 public static class TipoErroExtensions
 {
-    public static Error ObterMetadados(this TipoErro tipo, string campo, string mensagem)
+    public static Error ComMetadata(
+        this Error erro,
+        TipoErro tipo,
+        string campo)
     {
-        return new Error(mensagem)
+        return erro
             .WithMetadata(nameof(TipoErro), tipo)
             .WithMetadata("Campo", campo);
     }
->>>>>>> 96d17c4bf61ad43d88be9c0b8472b7d4c16e937f
 }
+

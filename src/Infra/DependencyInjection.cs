@@ -1,7 +1,7 @@
 using GeradorCertificado.Dominio.Compartilhado.Auth;
-using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Servicos;
 using GeradorCertificado.Dominio.Modulos.Cursos;
 using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Certificados;
+using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Servicos;
 using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.SolicitacaoCertificados;
 using GeradorCertificado.Infra.Compartilhado.Auth;
 using GeradorCertificado.Infra.Compartilhado.Orm;
@@ -18,10 +18,9 @@ namespace GeradorCertificado.Infra;
 
 public static class DependencyInjection
 {
-public static void AddInfrastructureServices(
+    public static void AddInfrastructureServices(
         this IServiceCollection services,
-        IConfiguration configuration
-    )
+        IConfiguration configuration)
     {
         services.AddScoped<IRepositorioCurso, RepositorioCursoEmOrm>();
         services.AddScoped<IRepositorioCertificado, RepositorioCertificadoEmOrm>();
@@ -30,10 +29,8 @@ public static void AddInfrastructureServices(
         services.AddSingleton<IGeradorDeCertificadoPdf, GeradorDeCertificadoPdfComQuestPdf>();
         services.AddSingleton<IArmazenamentoDeArquivos, ArmazenamentoDeArquivosEmDisco>();
 
-<<<<<<< HEAD
-=======
         services.AddDataProtection();
->>>>>>> 96d17c4bf61ad43d88be9c0b8472b7d4c16e937f
+
         services.AddIdentityCore<IdentityUser<Guid>>(options =>
         {
             options.User.RequireUniqueEmail = true;
@@ -48,15 +45,11 @@ public static void AddInfrastructureServices(
             options.Lockout.AllowedForNewUsers = true;
         })
         .AddRoles<IdentityRole<Guid>>()
-<<<<<<< HEAD
-        .AddEntityFrameworkStores<GeradorCertificadoDbContext>();
-
-        services.AddScoped<IGerenciadorDeIdentidade, GerenciadorDeIdentidade>();
-=======
         .AddEntityFrameworkStores<GeradorCertificadoDbContext>()
         .AddSignInManager()
         .AddDefaultTokenProviders();
->>>>>>> 96d17c4bf61ad43d88be9c0b8472b7d4c16e937f
+
+        services.AddScoped<IGerenciadorDeIdentidade, GerenciadorDeIdentidade>();
 
         services.AddDbContext<GeradorCertificadoDbContext>(options =>
         {
@@ -71,8 +64,7 @@ public static void AddInfrastructureServices(
                 if (string.IsNullOrWhiteSpace(connectionString))
                 {
                     throw new InvalidOperationException(
-                        $"A connection string \"PostgresEF\" não foi encontrada."
-                    );
+                        "A connection string \"PostgresEF\" não foi encontrada.");
                 }
 
                 options.UseNpgsql(connectionString, opt =>
@@ -83,3 +75,4 @@ public static void AddInfrastructureServices(
         });
     }
 }
+
