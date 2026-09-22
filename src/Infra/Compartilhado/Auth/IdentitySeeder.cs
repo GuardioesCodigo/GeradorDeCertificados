@@ -1,5 +1,6 @@
 using GeradorCertificado.Dominio.Compartilhado.Auth;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GeradorCertificado.Infra.Compartilhado.Auth;
 

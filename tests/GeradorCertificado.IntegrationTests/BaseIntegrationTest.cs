@@ -18,12 +18,12 @@ public abstract class BaseIntegrationTest
         Client = Factory.CreateClient();
     }
 
-    [TestCleanup]
-    public void FinalizarTeste()
-    {
-        Client.Dispose();
-        Factory.Dispose();
-    }
+   [TestCleanup]
+public void FinalizarTeste()
+{
+    Client?.Dispose();
+    Factory?.Dispose();
+}
 
     protected static string GerarEmailUnico() => $"{Guid.CreateVersion7()}@teste.com";
 
