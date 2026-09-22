@@ -30,6 +30,10 @@ public static void AddInfrastructureServices(
         services.AddSingleton<IGeradorDeCertificadoPdf, GeradorDeCertificadoPdfComQuestPdf>();
         services.AddSingleton<IArmazenamentoDeArquivos, ArmazenamentoDeArquivosEmDisco>();
 
+<<<<<<< HEAD
+=======
+        services.AddDataProtection();
+>>>>>>> 96d17c4bf61ad43d88be9c0b8472b7d4c16e937f
         services.AddIdentityCore<IdentityUser<Guid>>(options =>
         {
             options.User.RequireUniqueEmail = true;
@@ -44,9 +48,15 @@ public static void AddInfrastructureServices(
             options.Lockout.AllowedForNewUsers = true;
         })
         .AddRoles<IdentityRole<Guid>>()
+<<<<<<< HEAD
         .AddEntityFrameworkStores<GeradorCertificadoDbContext>();
 
         services.AddScoped<IGerenciadorDeIdentidade, GerenciadorDeIdentidade>();
+=======
+        .AddEntityFrameworkStores<GeradorCertificadoDbContext>()
+        .AddSignInManager()
+        .AddDefaultTokenProviders();
+>>>>>>> 96d17c4bf61ad43d88be9c0b8472b7d4c16e937f
 
         services.AddDbContext<GeradorCertificadoDbContext>(options =>
         {

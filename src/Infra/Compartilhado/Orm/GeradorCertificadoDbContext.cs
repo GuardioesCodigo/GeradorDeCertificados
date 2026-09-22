@@ -1,3 +1,4 @@
+using GeradorCertificado.Dominio.Compartilhado.Auth;
 using GeradorCertificado.Dominio.Modulos.Cursos;
 using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Certificados;
 using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.SolicitacaoCertificados;
@@ -8,18 +9,9 @@ using Microsoft.EntityFrameworkCore;
 namespace GeradorCertificado.Infra.Compartilhado.Orm;
 
 
-
-
-
-// Autenticação irá ficar para o final do projeto
-
-
-
-
-
 public sealed class GeradorCertificadoDbContext(
-    DbContextOptions<GeradorCertificadoDbContext> options
-    // IProvedorDeUsuario? provedorDeUsuario = null
+    DbContextOptions<GeradorCertificadoDbContext> options,
+    IProvedorDeUsuario? provedorDeUsuario = null
 ) : IdentityDbContext<IdentityUser<Guid>, IdentityRole<Guid>, Guid>(options)
 {
     public DbSet<Curso> Cursos => Set<Curso>();
@@ -32,89 +24,89 @@ public sealed class GeradorCertificadoDbContext(
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(GeradorCertificadoDbContext).Assembly);
 
-        // if (provedorDeUsuario is not null)
-        // {
-        // }
+        if (provedorDeUsuario is not null)
+        {
+        }
     }
 
-    // public override int SaveChanges()
-    // {
-    //     Guid? usuarioId = provedorDeUsuario?.Id;
+    public override int SaveChanges()
+    {
+        Guid? usuarioId = provedorDeUsuario?.Id;
 
-    //     if (!usuarioId.HasValue)
-    //     {
-    //         throw new UnauthorizedAccessException(
-    //             "Não é possível salvar entidades do usuário sem estar autenticado."
-    //         );
-    //     }
+        if (!usuarioId.HasValue)
+        {
+            throw new UnauthorizedAccessException(
+                "Não é possível salvar entidades do usuário sem estar autenticado."
+            );
+        }
 
-    //     foreach (var entry in ChangeTracker.Entries<IEntidadeDeUsuario>())
-    //     {
-    //         Guid usuarioOriginalId = Guid.Empty;
+        foreach (var entry in ChangeTracker.Entries<IEntidadeDeUsuario>())
+        {
+            Guid usuarioOriginalId = Guid.Empty;
 
-    //         switch (entry.State)
-    //         {
-    //             case EntityState.Added:
-    //                 if (entry.Entity.UsuarioId == Guid.Empty)
-    //                 {
-    //                     entry.Property(nameof(IEntidadeDeUsuario.UsuarioId)).CurrentValue = usuarioId.Value;
-    //                 }
-    //                 else if (entry.Entity.UsuarioId != usuarioId.Value)
-    //                 {
-    //                     throw new UnauthorizedAccessException(
-    //                         "Tentativa de criar entidade para outro usuário."
-    //                     );
-    //                 }
+            switch (entry.State)
+            {
+                case EntityState.Added:
+                    if (entry.Entity.UsuarioId == Guid.Empty)
+                    {
+                        entry.Property(nameof(IEntidadeDeUsuario.UsuarioId)).CurrentValue = usuarioId.Value;
+                    }
+                    else if (entry.Entity.UsuarioId != usuarioId.Value)
+                    {
+                        throw new UnauthorizedAccessException(
+                            "Tentativa de criar entidade para outro usuário."
+                        );
+                    }
 
-    //                 break;
+                    break;
 
-    //             case EntityState.Modified:
-    //                 usuarioOriginalId = entry
-    //                     .Property(nameof(IEntidadeDeUsuario.UsuarioId))
-    //                     .OriginalValue is Guid idOriginal
-    //                     ? idOriginal
-    //                     : Guid.Empty;
+                case EntityState.Modified:
+                    usuarioOriginalId = entry
+                        .Property(nameof(IEntidadeDeUsuario.UsuarioId))
+                        .OriginalValue is Guid idOriginal
+                        ? idOriginal
+                        : Guid.Empty;
 
-    //                 Guid idAtualUsuario = entry
-    //                     .Property(nameof(IEntidadeDeUsuario.UsuarioId))
-    //                     .OriginalValue is Guid idAtual
-    //                     ? idAtual
-    //                     : Guid.Empty;
+                    Guid idAtualUsuario = entry
+                        .Property(nameof(IEntidadeDeUsuario.UsuarioId))
+                        .OriginalValue is Guid idAtual
+                        ? idAtual
+                        : Guid.Empty;
 
-    //                 if (usuarioOriginalId != idAtualUsuario)
-    //                 {
-    //                     throw new UnauthorizedAccessException(
-    //                         "Não é permitido alterar o usuário de uma entidade."
-    //                     );
-    //                 }
+                    if (usuarioOriginalId != idAtualUsuario)
+                    {
+                        throw new UnauthorizedAccessException(
+                            "Não é permitido alterar o usuário de uma entidade."
+                        );
+                    }
 
-    //                 if (idAtualUsuario != usuarioId.Value)
-    //                 {
-    //                     throw new UnauthorizedAccessException(
-    //                         "Tentativa de modificar entidade de outro usuário."
-    //                     );
-    //                 }
+                    if (idAtualUsuario != usuarioId.Value)
+                    {
+                        throw new UnauthorizedAccessException(
+                            "Tentativa de modificar entidade de outro usuário."
+                        );
+                    }
 
-    //                 break;
+                    break;
 
-    //             case EntityState.Deleted:
-    //                 usuarioOriginalId = entry
-    //                     .Property(nameof(IEntidadeDeUsuario.UsuarioId))
-    //                     .OriginalValue is Guid original
-    //                     ? original
-    //                     : Guid.Empty;
+                case EntityState.Deleted:
+                    usuarioOriginalId = entry
+                        .Property(nameof(IEntidadeDeUsuario.UsuarioId))
+                        .OriginalValue is Guid original
+                        ? original
+                        : Guid.Empty;
 
-    //                 if (usuarioOriginalId != usuarioId.Value)
-    //                 {
-    //                     throw new UnauthorizedAccessException(
-    //                         "Tentativa de excluir entidade de outro usuário."
-    //                     );
-    //                 }
+                    if (usuarioOriginalId != usuarioId.Value)
+                    {
+                        throw new UnauthorizedAccessException(
+                            "Tentativa de excluir entidade de outro usuário."
+                        );
+                    }
 
-    //                 break;
-    //         }
-    //     }
+                    break;
+            }
+        }
 
-    //     return base.SaveChanges();
-    // }
+        return base.SaveChanges();
+    }
 }

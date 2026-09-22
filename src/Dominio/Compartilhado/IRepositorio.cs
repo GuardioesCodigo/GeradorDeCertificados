@@ -7,10 +7,7 @@ public sealed class ConflitoDePersistenciaException(
 
 public interface IRepositorio<T> where T : EntidadeBase<T>
 {
-    Task CadastrarAsync(
-        T entidade,
-        CancellationToken cancellationToken = default
-    );
+    Task CadastrarAsync(T entidade, CancellationToken cancellationToken = default);
 
     Task<bool> EditarAsync(
         Guid idSelecionado,
@@ -18,17 +15,12 @@ public interface IRepositorio<T> where T : EntidadeBase<T>
         CancellationToken cancellationToken = default
     );
 
-    Task<bool> ExcluirAsync(
-        Guid idSelecionado,
-        CancellationToken cancellationToken = default
-    );
+    Task<bool> ExcluirAsync(Guid idSelecionado, CancellationToken cancellationToken = default);
 
     Task<T?> SelecionarPorIdAsync(
         Guid idSelecionado,
         CancellationToken cancellationToken = default
     );
 
-    Task<List<T>> SelecionarTodosAsync(
-        CancellationToken cancellationToken = default
-    );
+    Task<List<T>> SelecionarTodosAsync(CancellationToken cancellationToken = default);
 }
