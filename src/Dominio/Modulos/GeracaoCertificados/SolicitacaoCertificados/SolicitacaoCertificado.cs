@@ -8,7 +8,7 @@ public sealed class SolicitacaoCertificado : EntidadeBase<SolicitacaoCertificado
     public Guid CursoId { get; private set; }
     public List<Certificado> Certificados { get; private set; } = [];
     public StatusSolicitacao StatusSolicitacao { get; private set; }
-    public DateTime DataSolicitacao { get; private set; } = DateTime.Now;
+    public DateTime DataSolicitacao { get; private set; } = DateTime.UtcNow;
     public string? CaminhoZip { get; private set; }
 
     private SolicitacaoCertificado() { }

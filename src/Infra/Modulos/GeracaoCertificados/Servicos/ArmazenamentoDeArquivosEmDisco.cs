@@ -12,7 +12,7 @@ public sealed class ArmazenamentoDeArquivosEmDisco : IArmazenamentoDeArquivos
         caminhoBase = configuration["Armazenamento:CaminhoBase"] is string caminhoConfigurado
             && !string.IsNullOrWhiteSpace(caminhoConfigurado)
                 ? caminhoConfigurado
-                : Path.Combine(AppContext.BaseDirectory, "App_Data");
+                : Path.Combine(AppContext.BaseDirectory, "Arquivos");
     }
 
     public async Task<string> SalvarAsync(
