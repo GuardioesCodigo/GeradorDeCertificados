@@ -150,6 +150,39 @@ jobs:
             --startup-project "${{ env.API_PROJECT }}" `
             --configuration Release
 
+      - name: Verify database connection
+        shell: pwsh
+        env:
+          AZURE_SQL_CONNECTION_STRING: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:AZURE_SQL_CONNECTION_STRING)) {
+          throw "AZURE_SQL_CONNECTION_STRING está vazio."
+            }
+
+          Write-Host "Connection string recebida."
+          Write-Host "Tamanho: $($env:AZURE_SQL_CONNECTION_STRING.Length) caracteres"
+
+          $env:ConnectionStrings__AzureSQL = $env:AZURE_SQL_CONNECTION_STRING
+
+
+      - name: Apply EF Core migrations
+        shell: pwsh
+        env:
+          AZURE_SQL_CONNECTION_STRING: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:AZURE_SQL_CONNECTION_STRING)) {
+          throw "AZURE_SQL_CONNECTION_STRING não foi configurado."
+          }
+
+          $env:ConnectionStrings__AzureSQL = $env:AZURE_SQL_CONNECTION_STRING
+          $env:PATH += ";$env:USERPROFILE\.dotnet\tools"
+
+          dotnet ef database update `
+          --project "src/Infra/GeradorCertificado.Infra.csproj" `
+          --startup-project "src/Api/GeradorCertificado.Api.csproj" `
+          --configuration Release `
+          --verbose
+
 
   # ============================================================
   # 4. CONFIGURAÇÃO DO AZURE + DEPLOY
