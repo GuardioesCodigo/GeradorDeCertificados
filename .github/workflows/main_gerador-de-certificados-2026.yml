@@ -1,7 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy ASP.Net Core app to Azure Web App - gerador-de-certificados-2026
+name: Build and deploy ASP.NET Core app to Azure Web App - gerador-de-certificados-2026
 
 on:
   push:
@@ -9,22 +6,43 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  DOTNET_VERSION: '10.x'
+  API_PROJECT: 'src/Api/GeradorCertificado.Api.csproj'
+  INFRA_PROJECT: 'src/Infra/GeradorCertificado.Infra.csproj'
+  APP_NAME: 'gerador-de-certificados-2026'
+
 jobs:
+
+  # ============================================================
+  # 1. TESTES
+  # ============================================================
   test:
+    name: Testes
     runs-on: windows-latest
+
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Set up .NET Core
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.x'
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Run tests
-        run: dotnet test --configuration Release --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
+      - name: Restore
+        run: dotnet restore
+
+      - name: Test
+        run: >
+          dotnet test
+          --configuration Release
+          --no-restore
+          --logger "trx;LogFileName=test-results.trx"
+          --results-directory ./TestResults
 
       - name: Upload test results
         if: always()
@@ -33,56 +51,175 @@ jobs:
           name: test-results
           path: ./TestResults
 
+
+  # ============================================================
+  # 2. BUILD + PUBLISH
+  # ============================================================
   build:
+    name: Build e Publish
     runs-on: windows-latest
     needs: test
+
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Set up .NET Core
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.x'
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Build with dotnet
-        run: dotnet build --configuration Release
+      - name: Restore
+        run: dotnet restore
 
-      - name: dotnet publish
-        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+      - name: Build API
+        run: >
+          dotnet build
+          ${{ env.API_PROJECT }}
+          --configuration Release
+          --no-restore
 
-      - name: Upload artifact for deployment job
+      - name: Publish API
+        run: >
+          dotnet publish
+          ${{ env.API_PROJECT }}
+          --configuration Release
+          --no-build
+          --output ./publish
+
+      - name: Upload application
         uses: actions/upload-artifact@v4
         with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          name: webapp
+          path: ./publish
 
+
+  # ============================================================
+  # 3. MIGRATIONS SQL SERVER
+  # ============================================================
   migrate:
+    name: Migrations SQL Server
     runs-on: windows-latest
     needs: build
+
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      contents: read
+
+    env:
+      ConnectionStrings__AzureSQL: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
+      ASPNETCORE_ENVIRONMENT: Production
 
     steps:
-      - name: Download artifact from build job
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Install Entity Framework CLI
+        shell: pwsh
+        run: |
+          dotnet tool install --global dotnet-ef --version 10.0.11
+
+          $env:PATH += ";$env:USERPROFILE\.dotnet\tools"
+
+          dotnet ef --version
+
+      - name: Build API
+        run: >
+          dotnet build
+          ${{ env.API_PROJECT }}
+          --configuration Release
+          --no-restore
+
+      - name: Apply EF Core migrations
+        shell: pwsh
+        run: |
+          $env:PATH += ";$env:USERPROFILE\.dotnet\tools"
+
+          dotnet ef database update `
+            --project "${{ env.INFRA_PROJECT }}" `
+            --startup-project "${{ env.API_PROJECT }}" `
+            --configuration Release
+
+
+  # ============================================================
+  # 4. CONFIGURAÇÃO DO AZURE + DEPLOY
+  # ============================================================
+  deploy:
+    name: Configurar Azure e Deploy
+    runs-on: windows-latest
+    needs:
+      - build
+      - migrate
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Download application
         uses: actions/download-artifact@v4
         with:
-          name: .net-app
+          name: webapp
+          path: ./publish
 
-      - name: Login to Azure
+      - name: Login Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_C21EC8B7840247A581B466282F88D494 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_40323A6711E5424F8DAEE18229EE2453 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_EC0F9CE2F3374D3FB3764CF04D5EFDA5 }}
 
+      # ----------------------------------------------------------
+      # Configura as variáveis do ASP.NET Core no App Service
+      # ----------------------------------------------------------
+      - name: Configure Azure App Settings
+        shell: pwsh
+        env:
+          AZURE_SQL_CONNECTION_STRING: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
+          JWT_KEY: ${{ secrets.JWT_KEY }}
+          NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
+        run: |
+          $settings = @{
+            "ConnectionStrings__AzureSQL" = $env:AZURE_SQL_CONNECTION_STRING
+            "Jwt__Key" = $env:JWT_KEY
+            "Jwt__Issuer" = "geradorCertificado-app-api"
+            "Jwt__Audience" = "geradorCertificado-app-client"
+            "NewRelic__Enabled" = "true"
+            "NewRelic__EndpointUrl" = "https://log-api.newrelic.com/log/v1"
+            "NewRelic__ApplicationName" = "geradorCertificado-app-prod"
+            "NewRelic__LicenseKey" = $env:NEW_RELIC_LICENSE_KEY
+          }
+
+          $settingsFile = Join-Path $env:RUNNER_TEMP "azure-appsettings.json"
+
+          $settings |
+            ConvertTo-Json |
+            Set-Content -Path $settingsFile -Encoding UTF8
+
+          az webapp config appsettings set `
+            --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" `
+            --name "${{ env.APP_NAME }}" `
+            --settings "@$settingsFile" `
+            --output none
+
+          Remove-Item $settingsFile -Force
+
+      # ----------------------------------------------------------
+      # Deploy
+      # ----------------------------------------------------------
       - name: Deploy to Azure Web App
-        id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'gerador-de-certificados-2026'
-          slot-name: 'Production'
-          package: .
+          app-name: ${{ env.APP_NAME }}
+          slot-name: Production
+          package: ./publish
