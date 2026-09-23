@@ -7,11 +7,10 @@
 # Uso:
 #   ./scripts/setup-user-secrets.sh
 #
-# Os valores abaixo são os padrões de desenvolvimento local (equivalentes
-# aos que estavam hardcoded no appsettings.Development.json antes desta
-# limpeza). Ajuste conforme o seu ambiente antes de rodar, ou rode o
-# script e depois sobrescreva uma chave específica com:
-#   dotnet user-secrets set "Jwt:Key" "outro-valor" --project src/Api
+# Os valores de ConnectionStrings abaixo são os padrões de desenvolvimento
+# local, equivalentes ao docker-compose.yml deste repositório. Ajuste
+# conforme o seu ambiente, ou sobrescreva uma chave específica depois com:
+#   dotnet user-secrets set "ConnectionStrings:AzureSQL" "outro-valor" --project src/Api
 
 set -euo pipefail
 
@@ -19,15 +18,17 @@ PROJETO="src/Api"
 
 echo "Configurando User Secrets em $PROJETO..."
 
-dotnet user-secrets set "Jwt:Key" "$(openssl rand -base64 48 2>/dev/null || echo 'troque-esta-chave-por-uma-chave-secreta-forte-de-producao')" --project "$PROJETO"
-
-dotnet user-secrets set "ConnectionStrings:PostgresEF" \
-  "Host=localhost;Port=5432;Database=GeradorCertificadoAppDb;Username=postgres;Password=postgres" \
+dotnet user-secrets set "ConnectionStrings:AzureSQL" \
+  "Server=localhost,1433;Database=GeradorCertificadoAppDb;User Id=sa;Password=SenhaForte#2026;TrustServerCertificate=True;" \
   --project "$PROJETO"
 
 dotnet user-secrets set "ConnectionStrings:RabbitMq" \
   "amqp://guest:guest@localhost:5672" \
   --project "$PROJETO"
 
-echo "Pronto. Para conferir os valores salvos:"
+echo "Pronto. Falta só a Jwt:Key, que este script deixa de propósito de fora"
+echo "(cada dev deve ter a sua). Gere uma e configure com:"
+echo "  dotnet user-secrets set \"Jwt:Key\" \"\$(openssl rand -base64 48)\" --project $PROJETO"
+echo
+echo "Para conferir os valores salvos:"
 echo "  dotnet user-secrets list --project $PROJETO"

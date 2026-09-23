@@ -96,6 +96,14 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    // Idempotente e seguro em qualquer ambiente — sem isso, cadastro falha em produção
+    // porque o papel "Cliente" nunca existiria (as migrations lá são aplicadas pelo
+    // job "migrate" do CI, não pelo próprio processo web).
+    await GeradorCertificado.Infra.Compartilhado.Auth.IdentitySeeder.SeedRolesAsync(scope.ServiceProvider);
+}
+
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
 {
     using var scope = app.Services.CreateScope();
@@ -106,8 +114,6 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
         dbContext.Database.EnsureCreated();
     else
         dbContext.Database.Migrate();
-
-    await GeradorCertificado.Infra.Compartilhado.Auth.IdentitySeeder.SeedRolesAsync(scope.ServiceProvider);
 
     if (app.Environment.IsDevelopment())
     {
