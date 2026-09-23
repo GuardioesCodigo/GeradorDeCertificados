@@ -96,6 +96,13 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+// Banco
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
 {
     using var scope = app.Services.CreateScope();
@@ -111,28 +118,16 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
     {
         dbContext.Database.Migrate();
     }
-
-    if (app.Environment.IsDevelopment())
-    {
-        app.UseSwagger();
-        app.UseSwaggerUI();
-    }
-}
-else
-{
-    using var scope = app.Services.CreateScope();
-
-    var dbContext =
-        scope.ServiceProvider.GetRequiredService<GeradorCertificadoDbContext>();
-
-    dbContext.Database.Migrate();
 }
 
+// Em produção, a migration deve ser feita pelo GitHub Actions.
+// O Seeder somente roda depois que o banco já está preparado.
 using (var scope = app.Services.CreateScope())
 {
     await GeradorCertificado.Infra.Compartilhado.Auth.IdentitySeeder
         .SeedRolesAsync(scope.ServiceProvider);
 }
+
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
