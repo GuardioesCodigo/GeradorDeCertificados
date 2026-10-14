@@ -6,25 +6,24 @@ on:
       - main
     paths:
       - "server/**"
+      - ".github/workflows/**"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 env:
-  DOTNET_VERSION: '10.x'
-  API_PROJECT: 'server/src/Api/GeradorCertificado.Api.csproj'
-  INFRA_PROJECT: 'server/src/Infra/GeradorCertificado.Infra.csproj'
-  APP_NAME: 'gerador-de-certificados-2026'
+  DOTNET_VERSION: "10.x"
+  SOLUTION_FILE: "server/GeradorCertificado.slnx"
+  API_PROJECT: "server/src/Api/GeradorCertificado.Api.csproj"
+  INFRA_PROJECT: "server/src/Infra/GeradorCertificado.Infra.csproj"
+  APP_NAME: "gerador-de-certificados-2026"
 
 jobs:
-
-  # ============================================================
-  # 1. TESTES
-  # ============================================================
+  # 1. Testes automatizados
   test:
     name: Testes
     runs-on: windows-latest
-
-    permissions:
-      contents: read
 
     steps:
       - name: Checkout
@@ -35,12 +34,21 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      - name: Verificar solução
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${{ env.SOLUTION_FILE }}")) {
+            Get-ChildItem -Path . -Recurse -Include *.sln,*.slnx,*.csproj |
+              Select-Object -ExpandProperty FullName
+            throw "Solução não encontrada: ${{ env.SOLUTION_FILE }}"
+          }
+
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore "${{ env.SOLUTION_FILE }}"
 
       - name: Test
         run: >
-          dotnet test
+          dotnet test "${{ env.SOLUTION_FILE }}"
           --configuration Release
           --no-restore
           --logger "trx;LogFileName=test-results.trx"
@@ -52,18 +60,13 @@ jobs:
         with:
           name: test-results
           path: ./TestResults
+          if-no-files-found: ignore
 
-
-  # ============================================================
-  # 2. BUILD + PUBLISH
-  # ============================================================
+  # 2. Compilação e publicação
   build:
     name: Build e Publish
     runs-on: windows-latest
     needs: test
-
-    permissions:
-      contents: read
 
     steps:
       - name: Checkout
@@ -75,27 +78,19 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore
-        run: dotnet restore server/GeradorCertificado.slnx
+        run: dotnet restore "${{ env.SOLUTION_FILE }}"
 
-      - name: Compilar
-        run: dotnet build server/GeradorCertificado.slnx --configuration Release --no-restore
-
-      - name: Executar testes
-        run: dotnet test server/GeradorCertificado.slnx --configuration Release --no-build
-
-      - name: Build API
+      - name: Build solution
         run: >
-          dotnet build
-          ${{ env.API_PROJECT }}
+          dotnet build "${{ env.SOLUTION_FILE }}"
           --configuration Release
           --no-restore
 
       - name: Publish API
         run: >
-          dotnet publish
-          ${{ env.API_PROJECT }}
+          dotnet publish "${{ env.API_PROJECT }}"
           --configuration Release
-          --no-build
+          --no-restore
           --output ./publish
 
       - name: Upload application
@@ -104,17 +99,11 @@ jobs:
           name: webapp
           path: ./publish
 
-
-  # ============================================================
-  # 3. MIGRATIONS SQL SERVER
-  # ============================================================
+  # 3. Migrações do SQL Server
   migrate:
     name: Migrations SQL Server
     runs-on: windows-latest
     needs: build
-
-    permissions:
-      contents: read
 
     env:
       ConnectionStrings__AzureSQL: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
@@ -129,22 +118,26 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      - name: Validar connection string
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:ConnectionStrings__AzureSQL)) {
+            throw "O secret AZURE_SQL_CONNECTION_STRING não foi configurado."
+          }
+
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore "${{ env.SOLUTION_FILE }}"
 
       - name: Install Entity Framework CLI
         shell: pwsh
         run: |
           dotnet tool install --global dotnet-ef --version 10.0.11
-
           $env:PATH += ";$env:USERPROFILE\.dotnet\tools"
-
           dotnet ef --version
 
       - name: Build API
         run: >
-          dotnet build
-          ${{ env.API_PROJECT }}
+          dotnet build "${{ env.API_PROJECT }}"
           --configuration Release
           --no-restore
 
@@ -156,45 +149,10 @@ jobs:
           dotnet ef database update `
             --project "${{ env.INFRA_PROJECT }}" `
             --startup-project "${{ env.API_PROJECT }}" `
-            --configuration Release
+            --configuration Release `
+            --no-build
 
-      - name: Verify database connection
-        shell: pwsh
-        env:
-          AZURE_SQL_CONNECTION_STRING: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
-        run: |
-          if ([string]::IsNullOrWhiteSpace($env:AZURE_SQL_CONNECTION_STRING)) {
-          throw "AZURE_SQL_CONNECTION_STRING está vazio."
-            }
-
-          Write-Host "Connection string recebida."
-          Write-Host "Tamanho: $($env:AZURE_SQL_CONNECTION_STRING.Length) caracteres"
-
-          $env:ConnectionStrings__AzureSQL = $env:AZURE_SQL_CONNECTION_STRING
-
-
-      - name: Apply EF Core migrations
-        shell: pwsh
-        env:
-          AZURE_SQL_CONNECTION_STRING: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
-        run: |
-          if ([string]::IsNullOrWhiteSpace($env:AZURE_SQL_CONNECTION_STRING)) {
-          throw "AZURE_SQL_CONNECTION_STRING não foi configurado."
-          }
-
-          $env:ConnectionStrings__AzureSQL = $env:AZURE_SQL_CONNECTION_STRING
-          $env:PATH += ";$env:USERPROFILE\.dotnet\tools"
-
-          dotnet ef database update `
-          --project "server/src/Infra/GeradorCertificado.Infra.csproj" `
-          --startup-project "server/src/Api/GeradorCertificado.Api.csproj" `
-          --configuration Release `
-          --verbose
-
-
-  # ============================================================
-  # 4. CONFIGURAÇÃO DO AZURE + DEPLOY
-  # ============================================================
+  # 4. Configuração do Azure e deploy
   deploy:
     name: Configurar Azure e Deploy
     runs-on: windows-latest
@@ -220,9 +178,6 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_40323A6711E5424F8DAEE18229EE2453 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_EC0F9CE2F3374D3FB3764CF04D5EFDA5 }}
 
-      # ----------------------------------------------------------
-      # Configura as variáveis do ASP.NET Core no App Service
-      # ----------------------------------------------------------
       - name: Configure Azure App Settings
         shell: pwsh
         env:
@@ -241,26 +196,39 @@ jobs:
             "NewRelic__LicenseKey" = $env:NEW_RELIC_LICENSE_KEY
           }
 
+          if ([string]::IsNullOrWhiteSpace($env:AZURE_SQL_CONNECTION_STRING)) {
+            throw "AZURE_SQL_CONNECTION_STRING não foi configurado."
+          }
+
+          if ([string]::IsNullOrWhiteSpace($env:JWT_KEY)) {
+            throw "JWT_KEY não foi configurado."
+          }
+
           $settingsFile = Join-Path $env:RUNNER_TEMP "azure-appsettings.json"
 
-          $settings |
-            ConvertTo-Json |
-            Set-Content -Path $settingsFile -Encoding UTF8
+          try {
+            $settings |
+              ConvertTo-Json |
+              Set-Content -Path $settingsFile -Encoding utf8
 
-          az webapp config appsettings set `
-            --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" `
-            --name "${{ env.APP_NAME }}" `
-            --settings "@$settingsFile" `
-            --output none
+            az webapp config appsettings set `
+              --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" `
+              --name "${{ env.APP_NAME }}" `
+              --settings "@$settingsFile" `
+              --output none
 
-          Remove-Item $settingsFile -Force
+            if ($LASTEXITCODE -ne 0) {
+              throw "Falha ao configurar as variáveis do Azure App Service."
+            }
+          }
+          finally {
+            Remove-Item $settingsFile -Force -ErrorAction SilentlyContinue
+          }
 
-      # ----------------------------------------------------------
-      # Deploy
-      # ----------------------------------------------------------
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.APP_NAME }}
           slot-name: Production
           package: ./publish
+
