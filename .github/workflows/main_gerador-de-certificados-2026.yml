@@ -4,12 +4,14 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "server/**"
   workflow_dispatch:
 
 env:
   DOTNET_VERSION: '10.x'
-  API_PROJECT: 'src/Api/GeradorCertificado.Api.csproj'
-  INFRA_PROJECT: 'src/Infra/GeradorCertificado.Infra.csproj'
+  API_PROJECT: 'server/src/Api/GeradorCertificado.Api.csproj'
+  INFRA_PROJECT: 'server/src/Infra/GeradorCertificado.Infra.csproj'
   APP_NAME: 'gerador-de-certificados-2026'
 
 jobs:
@@ -178,8 +180,8 @@ jobs:
           $env:PATH += ";$env:USERPROFILE\.dotnet\tools"
 
           dotnet ef database update `
-          --project "src/Infra/GeradorCertificado.Infra.csproj" `
-          --startup-project "src/Api/GeradorCertificado.Api.csproj" `
+          --project "server/src/Infra/GeradorCertificado.Infra.csproj" `
+          --startup-project "server/src/Api/GeradorCertificado.Api.csproj" `
           --configuration Release `
           --verbose
 
