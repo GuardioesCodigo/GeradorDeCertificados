@@ -75,7 +75,13 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore server/GeradorCertificado.slnx
+
+      - name: Compilar
+        run: dotnet build server/GeradorCertificado.slnx --configuration Release --no-restore
+
+      - name: Executar testes
+        run: dotnet test server/GeradorCertificado.slnx --configuration Release --no-build
 
       - name: Build API
         run: >
