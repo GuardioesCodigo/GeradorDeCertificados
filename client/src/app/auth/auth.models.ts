@@ -1,0 +1,41 @@
+export interface CadastroRequest {
+  readonly email: string;
+  readonly senha: string;
+}
+
+export interface CadastroConcluidoNavigationState {
+  readonly emailCadastrado?: string;
+}
+
+export interface UsuarioDto {
+  readonly id: string;
+  readonly email: string;
+}
+
+export interface LoginRequest {
+  readonly email: string;
+  readonly senha: string;
+}
+
+/** Resposta de POST /auth/login na API do Guardiões de Código. */
+export interface LoginResponse {
+  readonly token: string;
+  readonly dataExpiracaoEmUtc: string;
+}
+
+/** Token usado internamente pelo client (montado a partir de LoginResponse). */
+export interface TokenDto {
+  readonly usuarioId: string;
+  readonly accessToken: string;
+  readonly dataExpiracaoEmUtc: string;
+}
+
+export interface SessaoAutenticada {
+  readonly token: TokenDto;
+  readonly usuario: UsuarioDto;
+}
+
+export interface ApiValidationProblemDetails {
+  readonly detail?: string;
+  readonly errors?: Record<string, string[]>;
+}

@@ -1,11 +1,19 @@
-# Gerador de Certificados Online
+# Gerador de Certificados Online (Certifica+)
 
-API que automatiza a geração de certificados de curso: recebe uma lista de alunos, gera um PDF
+Aplicação full-stack para instituições de ensino: o **client** (Angular, pasta `client/`) oferece
+cadastro, login e telas de cursos; a **API** (.NET, pasta `server/`) automatiza a geração de certificados de curso: recebe uma lista de alunos, gera um PDF
 individual para cada um (QuestPDF) e disponibiliza um ZIP para download. O processamento é
 assíncrono (MassTransit + RabbitMQ), então a API responde imediatamente com `202 Accepted` e o
 cliente acompanha o progresso pelo endpoint de status.
 
-## Arquitetura
+## Estrutura do repositório
+
+```
+client/   Aplicação Angular (Tailwind CSS, Signal Forms, Lucide)
+server/   API ASP.NET Core — Clean Architecture, testes e docker-compose
+```
+
+## Arquitetura (API)
 
 Clean Architecture em 4 camadas, uma por projeto:
 
@@ -30,13 +38,15 @@ src/
 
 ## Rodando localmente
 
-### 1. Suba SQL Server e RabbitMQ
+### API
+
+#### 1. Suba SQL Server e RabbitMQ
 
 ```bash
 docker compose up -d
 ```
 
-### 2. Configure os User Secrets
+#### 2. Configure os User Secrets
 
 Nenhuma credencial fica no `appsettings.*.json` — tudo via
 [User Secrets](https://learn.microsoft.com/aspnet/core/security/app-secrets):
@@ -58,7 +68,7 @@ dotnet user-secrets set "Jwt:Key" "$(openssl rand -base64 48)" --project src/Api
 dotnet user-secrets list --project src/Api
 ```
 
-### 3. Gere e aplique a migration inicial
+#### 3. Gere e aplique a migration inicial
 
 O projeto migrou de PostgreSQL para SQL Server (Azure SQL) e ainda não tem nenhuma migration
 gerada para esse provider — veja `src/Infra/Compartilhado/Orm/Migrations/LEIA-ME.md`:
@@ -68,7 +78,7 @@ dotnet tool install --global dotnet-ef   # se ainda não tiver
 dotnet ef migrations add InicialSqlServer --project src/Infra --startup-project src/Api
 ```
 
-### 4. Rode a API
+#### 4. Rode a API
 
 ```bash
 dotnet run --project src/Api
@@ -76,6 +86,40 @@ dotnet run --project src/Api
 
 Em `Development`, as migrations do EF Core rodam automaticamente no boot e o papel `Cliente` é
 semeado. O Swagger fica em `https://localhost:7049/swagger`.
+
+### Client
+
+Requer Node.js compatível com Angular 22 (>= 22.22.3, 24.15+ ou 26+) e npm. Com a API rodando em
+`https://localhost:7049` (perfil `https`):
+
+```bash
+cd client
+npm ci
+npm start
+```
+
+O client abre em `http://localhost:4200`. Em desenvolvimento ele chama `/api/...` e o dev server
+encaminha para a API local (`client/proxy.conf.json`), então não é preciso configurar CORS. Confie
+no certificado de desenvolvimento do .NET (`dotnet dev-certs https --trust`) se o navegador/proxy
+reclamar do HTTPS.
+
+Build e testes do client:
+
+```bash
+npm --prefix client run build
+npm --prefix client test -- --watch=false
+```
+
+Observações sobre a integração com a API atual:
+
+- **Login**: a API devolve `{ token, dataExpiracaoEmUtc }`; o client monta a sessão a partir disso e
+  lê o id do usuário do claim do JWT.
+- **Listagem de cursos**: a API ainda não tem `GET /cursos`. A tela "Meus cursos" usa os ids dos
+  cursos cadastrados pelo próprio usuário neste navegador e carrega cada um com
+  `GET /cursos/{id}`. Quando a listagem existir na API, troque o corpo de `listar()` em
+  `client/src/app/cursos/cursos.service.ts`.
+- **Produção**: a URL da API fica em `client/src/environments/environment.ts`. A API precisa liberar
+  a origem do client via CORS para o client publicado conseguir chamá-la.
 
 ## Testes
 
@@ -92,10 +136,9 @@ dotnet test
   solicitar certificados → aguardar o processamento assíncrono real do consumer → baixar e validar
   o ZIP.
 
-  > Nota: dado que esta API não tem interface visual, os testes ponta a ponta foram escritos como
-  > testes HTTP completos via `WebApplicationFactory` (exercitam a pilha inteira: controller →
-  > handler → banco → mensageria → consumer → armazenamento em disco), em vez de testes de
-  > navegador com Playwright — que faz mais sentido para aplicações com UI.
+  > Nota: os testes ponta a ponta da API foram escritos como testes HTTP completos via
+  > `WebApplicationFactory` (exercitam a pilha inteira: controller → handler → banco → mensageria →
+  > consumer → armazenamento em disco), sem depender de navegador.
 
 Nenhum dos dois projetos de teste toca no SQL Server/RabbitMQ reais do `docker-compose.yml`; eles
 são totalmente isolados e podem rodar em qualquer máquina/CI sem nenhuma dependência externa.
