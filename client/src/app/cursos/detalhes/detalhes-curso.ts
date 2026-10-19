@@ -3,11 +3,12 @@ import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
 import { ApiValidationProblemDetails } from '../../auth/auth.models';
+import { CertificadosCurso } from '../../certificados/certificados-curso';
 import { CursoDto } from '../cursos.models';
 import { CursosService } from '../cursos.service';
 
 @Component({
-  imports: [],
+  imports: [CertificadosCurso],
   selector: 'app-detalhes-curso',
   templateUrl: './detalhes-curso.html',
 })

@@ -114,6 +114,12 @@ Observações sobre a integração com a API atual:
 
 - **Login**: a API devolve `{ token, dataExpiracaoEmUtc }`; o client monta a sessão a partir disso e
   lê o id do usuário do claim do JWT.
+- **Emissão de certificados**: na página de detalhes de um curso, informe os alunos (um nome por
+  linha) e o client chama `POST /cursos/{id}/certificados`. Em seguida acompanha
+  `GET /cursos/{id}/status` e `GET /cursos/{id}/certificados` a cada 2 segundos até a solicitação
+  terminar, mostrando o progresso e o estado de cada certificado. Com o status `Concluido`, o botão
+  "Baixar ZIP" usa `GET /cursos/{id}/certificados/download`. Enquanto há processamento em andamento
+  a API recusa (409) uma nova solicitação para o mesmo curso, e o client desabilita o botão.
 - **Listagem de cursos**: a API ainda não tem `GET /cursos`. A tela "Meus cursos" usa os ids dos
   cursos cadastrados pelo próprio usuário neste navegador e carrega cada um com
   `GET /cursos/{id}`. Quando a listagem existir na API, troque o corpo de `listar()` em

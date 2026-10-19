@@ -1,3 +1,4 @@
 {
-    "dotnet.defaultSolution": "GeradorCertificado.slnx"
+    "dotnet.defaultSolution": "GeradorCertificado.slnx",
+    "workbench.iconTheme": "catppuccin-mocha"
 }
