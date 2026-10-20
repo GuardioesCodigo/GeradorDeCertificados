@@ -37,16 +37,11 @@ const CLASSES_CERTIFICADO: Record<StatusCertificado, string> = {
   Falha: 'bg-rose-50 text-rose-800',
 };
 
-
 type EstadoEtapa = 'concluida' | 'atual' | 'pendente';
 
 interface EtapaProcessamento {
   readonly rotulo: string;
   readonly estado: EstadoEtapa;
-}
-
-interface EmissaoFormModel {
-  readonly nomes: string;
 }
 
 const ETAPAS: readonly { readonly status: StatusSolicitacao; readonly rotulo: string }[] = [
@@ -56,7 +51,9 @@ const ETAPAS: readonly { readonly status: StatusSolicitacao; readonly rotulo: st
   { status: 'Concluido', rotulo: 'Concluído' },
 ];
 
-
+interface EmissaoFormModel {
+  readonly nomes: string;
+}
 
 @Component({
   imports: [FormField, LucideDownload, LucideLoaderCircle, LucideSend],
