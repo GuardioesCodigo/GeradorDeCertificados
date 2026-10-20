@@ -121,6 +121,7 @@
         </div>
       </div>
 
+<<<<<<< HEAD
       @if (etapas().length > 0) {
         <ol class="grid gap-3 sm:grid-cols-4" aria-label="Etapas do processamento">
           @for (etapa of etapas(); track etapa.rotulo; let indice = $index) {
@@ -160,6 +161,8 @@
         </ol>
       }
 
+=======
+>>>>>>> 3e80481b63b1218c2cd916e32d4280379e443a9d
       <div>
         <div class="mb-2 flex justify-between text-sm text-slate-600">
           <span>
@@ -193,7 +196,11 @@
 
       @if (certificados().length > 0) {
         <ul class="divide-y divide-slate-100 rounded-xl border border-slate-200">
+<<<<<<< HEAD
           @for (certificado of certificadosOrdenados(); track certificado.id) {
+=======
+          @for (certificado of certificados(); track certificado.id) {
+>>>>>>> 3e80481b63b1218c2cd916e32d4280379e443a9d
             <li class="flex items-center justify-between gap-3 px-4 py-3">
               <span class="min-w-0 break-words text-sm font-medium text-slate-900">{{
                 certificado.nomeAluno

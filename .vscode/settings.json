@@ -1,4 +1,4 @@
 {
     "dotnet.defaultSolution": "GeradorCertificado.slnx",
-    "workbench.iconTheme": "catppuccin-mocha"
+    "workbench.iconTheme": "vscode-icons"
 }

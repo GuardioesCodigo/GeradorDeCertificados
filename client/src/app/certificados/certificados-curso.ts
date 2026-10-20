@@ -37,6 +37,7 @@ const CLASSES_CERTIFICADO: Record<StatusCertificado, string> = {
   Falha: 'bg-rose-50 text-rose-800',
 };
 
+<<<<<<< HEAD
 type EstadoEtapa = 'concluida' | 'atual' | 'pendente';
 
 interface EtapaProcessamento {
@@ -51,6 +52,8 @@ const ETAPAS: readonly { readonly status: StatusSolicitacao; readonly rotulo: st
   { status: 'Concluido', rotulo: 'Concluído' },
 ];
 
+=======
+>>>>>>> 3e80481b63b1218c2cd916e32d4280379e443a9d
 interface EmissaoFormModel {
   readonly nomes: string;
 }
@@ -91,6 +94,7 @@ export class CertificadosCurso implements OnInit {
     return Math.round((processados / status.totalCertificados) * 100);
   });
 
+<<<<<<< HEAD
   /** Linha do tempo do processamento; some quando a solicitação falha. */
   protected readonly etapas = computed<readonly EtapaProcessamento[]>(() => {
     const status = this.status()?.status;
@@ -120,6 +124,8 @@ export class CertificadosCurso implements OnInit {
     }),
   );
 
+=======
+>>>>>>> 3e80481b63b1218c2cd916e32d4280379e443a9d
   protected readonly modeloEmissao = signal<EmissaoFormModel>({ nomes: '' });
   protected readonly formularioEmissao = form(this.modeloEmissao, (modelo) => {
     required(modelo.nomes, { message: 'Informe ao menos um aluno, um nome por linha.' });
