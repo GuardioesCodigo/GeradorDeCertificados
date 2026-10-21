@@ -1,3 +1,4 @@
+using GeradorCertificado.Dominio.Modulos.Alunos;
 using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Certificados;
 using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.SolicitacaoCertificados;
 using Microsoft.EntityFrameworkCore;
@@ -53,5 +54,14 @@ public sealed class CertificadoConfiguration : IEntityTypeConfiguration<Certific
         builder.Property(e => e.CaminhoArquivo).HasMaxLength(500);
 
         builder.Property(e => e.SolicitacaoCertificadoId).IsRequired();
+
+        builder.Property(e => e.AlunoId);
+
+        builder.HasIndex(e => e.AlunoId);
+
+        builder.HasOne<Aluno>()
+            .WithMany()
+            .HasForeignKey(e => e.AlunoId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

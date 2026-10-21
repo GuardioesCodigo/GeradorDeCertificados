@@ -1,10 +1,12 @@
 using GeradorCertificado.Dominio.Compartilhado.Auth;
+using GeradorCertificado.Dominio.Modulos.Alunos;
 using GeradorCertificado.Dominio.Modulos.Cursos;
 using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Certificados;
 using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Servicos;
 using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.SolicitacaoCertificados;
 using GeradorCertificado.Infra.Compartilhado.Auth;
 using GeradorCertificado.Infra.Compartilhado.Orm;
+using GeradorCertificado.Infra.Modulos.Alunos;
 using GeradorCertificado.Infra.Modulos.Cursos;
 using GeradorCertificado.Infra.Modulos.GeracaoCertificados.Certificados;
 using GeradorCertificado.Infra.Modulos.GeracaoCertificados.Servicos;
@@ -22,6 +24,7 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        services.AddScoped<IRepositorioAluno, RepositorioAlunoEmOrm>();
         services.AddScoped<IRepositorioCurso, RepositorioCursoEmOrm>();
         services.AddScoped<IRepositorioCertificado, RepositorioCertificadoEmOrm>();
         services.AddScoped<IRepositorioSolicitacaoCertificado, RepositorioSolicitacaoCertificadoEmOrm>();

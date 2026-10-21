@@ -131,6 +131,60 @@ Observações sobre a integração com a API atual:
 - **Produção**: a URL da API fica em `client/src/environments/environment.ts`. A API precisa liberar
   a origem do client via CORS para o client publicado conseguir chamá-la.
 
+## Alunos e download de certificados
+
+O nome de cada aluno fica gravado (tabela `TBAlunos`): o mesmo nome, em qualquer curso, é o mesmo
+aluno (espaços extras e maiúsculas/minúsculas são ignorados). No client, a aba **Alunos** lista e
+busca alunos; ao abrir um aluno aparecem os certificados dele em todos os cursos, com download de
+um PDF, dos selecionados ou de todos em um único ZIP.
+
+| Método | Rota | O que faz |
+| --- | --- | --- |
+| GET | `/alunos?busca=` | Lista/busca alunos |
+| GET | `/alunos/{alunoId}` | Dados do aluno |
+| GET | `/alunos/{alunoId}/certificados` | Certificados gerados, de todos os cursos |
+| GET | `/alunos/{alunoId}/certificados/{certificadoId}/download` | PDF de um certificado |
+| POST | `/alunos/{alunoId}/certificados/download` | ZIP; corpo `{ "certificadoIds": [] }` (vazio = todos) |
+
+Homônimos são tratados como a mesma pessoa. A migration `AdicionarAlunos` cria os alunos a partir
+dos certificados já emitidos.
+
+## Publicação na Azure
+
+A API continua sendo publicada pelo workflow `main_gerador-de-certificados-2026.yml` (testes,
+migrations e deploy no App Service). O client é publicado no **Azure Static Web Apps** pelo
+workflow `deploy-client-azure.yml`.
+
+1. Crie o Static Web App (plano Free) e pegue o endereço e o token de deploy:
+
+   ```bash
+   az staticwebapp create --name certifica-client --resource-group <RESOURCE_GROUP> \
+     --location eastus2 --sku Free
+   az staticwebapp show --name certifica-client --resource-group <RESOURCE_GROUP> \
+     --query defaultHostname -o tsv
+   az staticwebapp secrets list --name certifica-client --resource-group <RESOURCE_GROUP> \
+     --query properties.apiKey -o tsv
+   ```
+
+2. No GitHub (Settings → Secrets and variables → Actions):
+
+   | Tipo | Nome | Valor |
+   | --- | --- | --- |
+   | Secret | `AZURE_STATIC_WEB_APPS_API_TOKEN` | token do comando acima |
+   | Variable | `API_URL` | URL https da API, ex.: `https://<app>.azurewebsites.net` |
+   | Variable | `CLIENT_URL` | `https://<defaultHostname do Static Web App>` (sem barra no final) |
+   | Variable | `STORAGE_PATH` | pasta persistente dos PDFs/ZIPs, ex.: `D:\home\Arquivos` (Windows) ou `/home/Arquivos` (Linux) |
+
+   O hostname da API sai de `az webapp show --name gerador-de-certificados-2026
+   --resource-group <RESOURCE_GROUP> --query defaultHostName -o tsv`.
+
+3. Faça push na `main`. O workflow da API aplica a migration `AdicionarAlunos`, grava `CLIENT_URL`
+   como origem permitida no CORS (`Cors__AllowedOrigins__0`) e publica; o workflow do client gera o
+   build apontando para `API_URL` e publica o site.
+
+Sem `STORAGE_PATH`, os arquivos ficam na pasta da aplicação e podem ser apagados em um novo deploy;
+nesse caso o download de certificados antigos responde 404 pedindo para emiti-los de novo.
+
 ## Testes
 
 ```bash

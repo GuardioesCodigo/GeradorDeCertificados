@@ -22,6 +22,24 @@ namespace GeradorCertificado.Infra.Compartilhado.Orm.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("GeradorCertificado.Dominio.Modulos.Alunos.Aluno", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Nome")
+                        .IsUnique();
+
+                    b.ToTable("TBAlunos", (string)null);
+                });
+
             modelBuilder.Entity("GeradorCertificado.Dominio.Modulos.Cursos.Curso", b =>
                 {
                     b.Property<Guid>("Id")
@@ -53,6 +71,9 @@ namespace GeradorCertificado.Infra.Compartilhado.Orm.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("AlunoId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("CaminhoArquivo")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -74,6 +95,8 @@ namespace GeradorCertificado.Infra.Compartilhado.Orm.Migrations
                         .HasColumnType("nvarchar(20)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AlunoId");
 
                     b.HasIndex("SolicitacaoCertificadoId");
 
@@ -304,6 +327,11 @@ namespace GeradorCertificado.Infra.Compartilhado.Orm.Migrations
 
             modelBuilder.Entity("GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Certificados.Certificado", b =>
                 {
+                    b.HasOne("GeradorCertificado.Dominio.Modulos.Alunos.Aluno", null)
+                        .WithMany()
+                        .HasForeignKey("AlunoId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("GeradorCertificado.Dominio.Modulos.GeracaoCertificados.SolicitacaoCertificados.SolicitacaoCertificado", null)
                         .WithMany("Certificados")
                         .HasForeignKey("SolicitacaoCertificadoId")

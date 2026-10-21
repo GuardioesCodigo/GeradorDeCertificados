@@ -10,10 +10,11 @@ public sealed class Certificado : EntidadeBase<Certificado>
     public Guid SolicitacaoCertificadoId { get; private set; }
     public string? CaminhoArquivo { get; private set; }
     public DateTime? DataGeracao { get; private set; }
+    public Guid? AlunoId { get; private set; }
 
     public Certificado() {}
 
-    public Certificado(Guid id, string nomeAluno, StatusCertificado status, string? caminhoArquivo, DateTime? dataGeracao, Guid solicitacaoCertificadoId)
+    public Certificado(Guid id, string nomeAluno, StatusCertificado status, string? caminhoArquivo, DateTime? dataGeracao, Guid solicitacaoCertificadoId, Guid? alunoId = null)
     {
         Id = id;
         NomeAluno = nomeAluno;
@@ -21,6 +22,7 @@ public sealed class Certificado : EntidadeBase<Certificado>
         CaminhoArquivo = caminhoArquivo;
         DataGeracao = dataGeracao;
         SolicitacaoCertificadoId = solicitacaoCertificadoId;
+        AlunoId = alunoId;
     }
 
     public override IReadOnlyList<ErroValidacao> Validar()

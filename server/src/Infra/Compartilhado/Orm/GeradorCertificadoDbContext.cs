@@ -1,4 +1,5 @@
 using GeradorCertificado.Dominio.Compartilhado.Auth;
+using GeradorCertificado.Dominio.Modulos.Alunos;
 using GeradorCertificado.Dominio.Modulos.Cursos;
 using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Certificados;
 using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.SolicitacaoCertificados;
@@ -14,6 +15,7 @@ public sealed class GeradorCertificadoDbContext(
     IProvedorDeUsuario? provedorDeUsuario = null
 ) : IdentityDbContext<IdentityUser<Guid>, IdentityRole<Guid>, Guid>(options)
 {
+    public DbSet<Aluno> Alunos => Set<Aluno>();
     public DbSet<Curso> Cursos => Set<Curso>();
     public DbSet<SolicitacaoCertificado> SolicitacoesCertificados => Set<SolicitacaoCertificado>();
     public DbSet<Certificado> Certificados => Set<Certificado>();

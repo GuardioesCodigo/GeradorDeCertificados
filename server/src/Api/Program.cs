@@ -250,6 +250,25 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 // ============================================================
+// CORS (client Angular)
+// ============================================================
+
+string[] origensPermitidas =
+    builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Client", policy =>
+    {
+        policy
+            .WithOrigins(origensPermitidas)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .WithExposedHeaders("Content-Disposition");
+    });
+});
+
+// ============================================================
 // BUILD DA APLICAÇÃO
 // ============================================================
 
@@ -414,11 +433,18 @@ app.UseStatusCodePages();
 
 app.UseHttpsRedirection();
 
+app.UseCors("Client");
+
 app.UseAuthentication();
 
 app.UseAuthorization();
 
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.MapControllers();
+
+app.MapFallbackToFile("index.html");
 
 // ============================================================
 // START

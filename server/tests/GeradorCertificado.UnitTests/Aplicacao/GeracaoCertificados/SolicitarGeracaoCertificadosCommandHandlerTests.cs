@@ -1,5 +1,6 @@
 using GeradorCertificado.Aplicacao.Modulos.GeracaoCertificados;
 using GeradorCertificado.Aplicacao.Modulos.GeracaoCertificados.Mensageria;
+using GeradorCertificado.Dominio.Modulos.Alunos;
 using GeradorCertificado.Dominio.Modulos.Cursos;
 using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.SolicitacaoCertificados;
 using MassTransit;
@@ -13,10 +14,11 @@ public sealed class SolicitarGeracaoCertificadosCommandHandlerTests
 {
     private readonly Mock<IRepositorioCurso> repositorioCurso = new();
     private readonly Mock<IRepositorioSolicitacaoCertificado> repositorioSolicitacao = new();
+    private readonly Mock<IRepositorioAluno> repositorioAluno = new();
     private readonly Mock<IPublishEndpoint> publishEndpoint = new();
 
     private SolicitarGeracaoCertificadosCommandHandler CriarHandler() =>
-        new(repositorioCurso.Object, repositorioSolicitacao.Object, publishEndpoint.Object);
+        new(repositorioCurso.Object, repositorioSolicitacao.Object, repositorioAluno.Object, publishEndpoint.Object);
 
     private static Curso CriarCurso(Guid id) =>
         new(id, "Curso", "descrição", 40, DateTime.Today.AddMonths(1));
@@ -122,4 +124,59 @@ public sealed class SolicitarGeracaoCertificadosCommandHandlerTests
             Times.Never
         );
     }
+
+    [TestMethod]
+    public async Task Handle_DeveCadastrarAluno_QuandoNomeAindaNaoExiste()
+    {
+        var cursoId = Guid.CreateVersion7();
+
+        repositorioCurso
+            .Setup(repo => repo.SelecionarPorIdAsync(cursoId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CriarCurso(cursoId));
+
+        repositorioAluno
+            .Setup(repo => repo.SelecionarPorNomeAsync("Maria da Silva", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Aluno?)null);
+
+        var handler = CriarHandler();
+        var command = new SolicitarGeracaoCertificadosCommand(
+            cursoId, [new AlunoParaCertificadoCommand("  Maria   da Silva ")]);
+
+        var resultado = await handler.Handle(command, CancellationToken.None);
+
+        Assert.IsTrue(resultado.IsSuccess);
+        repositorioAluno.Verify(
+            repo => repo.CadastrarAsync(
+                It.Is<Aluno>(aluno => aluno.Nome == "Maria da Silva"),
+                It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+
+    [TestMethod]
+    public async Task Handle_NaoDeveCadastrarAlunoDeNovo_QuandoNomeJaExiste()
+    {
+        var cursoId = Guid.CreateVersion7();
+
+        repositorioCurso
+            .Setup(repo => repo.SelecionarPorIdAsync(cursoId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CriarCurso(cursoId));
+
+        repositorioAluno
+            .Setup(repo => repo.SelecionarPorNomeAsync("Maria da Silva", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Aluno(Guid.CreateVersion7(), "Maria da Silva"));
+
+        var handler = CriarHandler();
+        var command = new SolicitarGeracaoCertificadosCommand(
+            cursoId, [new AlunoParaCertificadoCommand("Maria da Silva")]);
+
+        var resultado = await handler.Handle(command, CancellationToken.None);
+
+        Assert.IsTrue(resultado.IsSuccess);
+        repositorioAluno.Verify(
+            repo => repo.CadastrarAsync(It.IsAny<Aluno>(), It.IsAny<CancellationToken>()),
+            Times.Never
+        );
+    }
+
 }

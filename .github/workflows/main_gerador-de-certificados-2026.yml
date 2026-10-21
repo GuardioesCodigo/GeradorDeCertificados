@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "server/**"
+      - "client/**"
       - ".github/workflows/**"
   workflow_dispatch:
 
@@ -80,6 +81,21 @@ jobs:
       - name: Restore
         run: dotnet restore "${{ env.SOLUTION_FILE }}"
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Instalar dependências do Angular
+        working-directory: client
+        run: npm ci
+
+      - name: Compilar Angular
+        working-directory: client
+        run: npm run build -- --configuration production
+
       - name: Build solution
         run: >
           dotnet build "${{ env.SOLUTION_FILE }}"
@@ -93,6 +109,47 @@ jobs:
           --no-restore
           --output ./publish
 
+      - name: Integrar front-end ao pacote da API
+        shell: pwsh
+        run: |
+          $distPath = Join-Path $PWD "client/dist"
+
+          if (-not (Test-Path $distPath)) {
+            throw "A compilação Angular não gerou a pasta client/dist."
+          }
+
+          $indexFiles = @(Get-ChildItem $distPath -Filter "index.html" -Recurse -File)
+
+          if ($indexFiles.Count -eq 0) {
+            throw "index.html não encontrado no resultado da compilação Angular."
+          }
+
+          $browserIndex = $indexFiles |
+            Where-Object { $_.Directory.Name -eq "browser" } |
+            Select-Object -First 1
+
+          if ($browserIndex) {
+            $frontendPath = $browserIndex.Directory.FullName
+          } else {
+            $frontendPath = $indexFiles[0].Directory.FullName
+          }
+
+          $wwwroot = Join-Path $PWD "publish/wwwroot"
+
+          New-Item -ItemType Directory -Path $wwwroot -Force | Out-Null
+
+          Copy-Item `
+            -Path "$frontendPath/*" `
+            -Destination $wwwroot `
+            -Recurse `
+            -Force
+
+          if (-not (Test-Path (Join-Path $wwwroot "index.html"))) {
+            throw "O index.html não foi copiado para publish/wwwroot."
+          }
+
+          Write-Host "Front-end integrado: $frontendPath"
+          Write-Host "Pacote final: $wwwroot"
       - name: Upload application
         uses: actions/upload-artifact@v4
         with:
@@ -184,6 +241,8 @@ jobs:
           AZURE_SQL_CONNECTION_STRING: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
           JWT_KEY: ${{ secrets.JWT_KEY }}
           NEW_RELIC_LICENSE_KEY: ${{ secrets.NEW_RELIC_LICENSE_KEY }}
+          CLIENT_URL: ${{ vars.CLIENT_URL }}
+          STORAGE_PATH: ${{ vars.STORAGE_PATH }}
         run: |
           $settings = @{
             "ConnectionStrings__AzureSQL" = $env:AZURE_SQL_CONNECTION_STRING
@@ -194,6 +253,16 @@ jobs:
             "NewRelic__EndpointUrl" = "https://log-api.newrelic.com/log/v1"
             "NewRelic__ApplicationName" = "geradorCertificado-app-prod"
             "NewRelic__LicenseKey" = $env:NEW_RELIC_LICENSE_KEY
+          }
+
+          # Origem do client (Azure Static Web Apps) liberada via CORS na API.
+          if (-not [string]::IsNullOrWhiteSpace($env:CLIENT_URL)) {
+            $settings["Cors__AllowedOrigins__0"] = $env:CLIENT_URL.Trim().TrimEnd('/')
+          }
+
+          # Pasta persistente para os PDFs/ZIPs (ex.: D:\home\Arquivos no Windows, /home/Arquivos no Linux).
+          if (-not [string]::IsNullOrWhiteSpace($env:STORAGE_PATH)) {
+            $settings["Armazenamento__CaminhoBase"] = $env:STORAGE_PATH.Trim()
           }
 
           if ([string]::IsNullOrWhiteSpace($env:AZURE_SQL_CONNECTION_STRING)) {

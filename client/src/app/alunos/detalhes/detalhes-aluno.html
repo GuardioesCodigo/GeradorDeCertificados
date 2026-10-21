@@ -1,0 +1,131 @@
+@if (carregando()) {
+  <p class="rounded-2xl border border-slate-200 bg-white p-6 text-slate-600" role="status">
+    Carregando aluno...
+  </p>
+} @else if (mensagemErro() && !aluno()) {
+  <div
+    class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900"
+    role="alert"
+  >
+    {{ mensagemErro() }}
+  </div>
+  <a routerLink="/alunos/listar" class="mt-4 inline-block text-sm font-semibold text-indigo-700"
+    >Voltar para alunos</a
+  >
+} @else if (aluno(); as aluno) {
+  <section aria-labelledby="aluno-titulo" class="space-y-6">
+    <div>
+      <a routerLink="/alunos/listar" class="text-sm font-semibold text-indigo-700"
+        >← Voltar para alunos</a
+      >
+      <h1
+        id="aluno-titulo"
+        class="mt-3 break-words text-3xl font-semibold tracking-tight text-slate-950"
+      >
+        {{ aluno.nome }}
+      </h1>
+      <p class="mt-2 text-slate-600">
+        {{ certificados().length }}
+        {{ certificados().length === 1 ? 'certificado disponível' : 'certificados disponíveis' }}
+      </p>
+    </div>
+
+    @if (mensagemErro()) {
+      <div
+        class="whitespace-pre-line rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900"
+        role="alert"
+      >
+        {{ mensagemErro() }}
+      </div>
+    }
+
+    @if (certificados().length === 0) {
+      <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
+        <p class="font-semibold text-slate-900">Nenhum certificado gerado ainda</p>
+        <p class="mt-1 text-sm text-slate-600">
+          Quando um certificado deste aluno for gerado, ele aparece aqui.
+        </p>
+      </div>
+    } @else {
+      <div
+        class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+      >
+        <label class="flex items-center gap-2 text-sm font-medium text-slate-800">
+          <input
+            type="checkbox"
+            class="size-4 rounded border-slate-300 accent-indigo-700"
+            [checked]="todosSelecionados()"
+            (change)="alternarTodos($any($event.target).checked)"
+          />
+          Selecionar todos
+        </label>
+
+        <div class="flex flex-wrap gap-3">
+          <button
+            type="button"
+            (click)="baixarSelecionados()"
+            [disabled]="baixando() || selecionados().size === 0"
+            class="inline-flex items-center gap-2 rounded-xl bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <svg lucideDownload class="size-4" aria-hidden="true"></svg>
+            Baixar selecionados (ZIP)
+          </button>
+
+          <button
+            type="button"
+            (click)="baixarZip([])"
+            [disabled]="baixando()"
+            class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Baixar todos (ZIP)
+          </button>
+        </div>
+      </div>
+
+      @if (baixando()) {
+        <p class="flex items-center gap-2 text-sm text-slate-600" role="status">
+          <svg
+            lucideLoaderCircle
+            class="size-4 animate-spin text-indigo-700"
+            aria-hidden="true"
+          ></svg>
+          Preparando o download...
+        </p>
+      }
+
+      <ul class="space-y-3">
+        @for (certificado of certificados(); track certificado.certificadoId) {
+          <li
+            class="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+          >
+            <input
+              type="checkbox"
+              class="size-4 rounded border-slate-300 accent-indigo-700"
+              [attr.aria-label]="'Selecionar certificado de ' + certificado.cursoNome"
+              [checked]="selecionados().has(certificado.certificadoId)"
+              (change)="alternarSelecao(certificado.certificadoId, $any($event.target).checked)"
+            />
+
+            <div class="min-w-0 flex-1">
+              <h2 class="break-words font-semibold text-slate-950">{{ certificado.cursoNome }}</h2>
+              <p class="mt-1 text-sm text-slate-600">
+                {{ certificado.cargaHoraria }} horas <span aria-hidden="true">·</span> Concluído em
+                {{ formatarData(certificado.dataConclusao) }}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              (click)="baixarPdf(certificado)"
+              [disabled]="baixando()"
+              class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <svg lucideDownload class="size-4" aria-hidden="true"></svg>
+              Baixar PDF
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+}

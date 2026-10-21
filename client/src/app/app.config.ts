@@ -51,6 +51,24 @@ const routes: Routes = [
     ],
   },
   {
+    path: 'alunos',
+    canActivate: [autenticadoGuard],
+    canActivateChild: [autenticadoGuard],
+    loadComponent: () => import('./cursos/shell/cursos-shell').then((c) => c.CursosShell),
+    children: [
+      { path: '', redirectTo: 'listar', pathMatch: 'full' },
+      {
+        path: 'listar',
+        loadComponent: () => import('./alunos/listar/listar-alunos').then((c) => c.ListarAlunos),
+      },
+      {
+        path: 'detalhes/:alunoId',
+        loadComponent: () =>
+          import('./alunos/detalhes/detalhes-aluno').then((c) => c.DetalhesAluno),
+      },
+    ],
+  },
+  {
     path: '**',
     redirectTo: '',
   },

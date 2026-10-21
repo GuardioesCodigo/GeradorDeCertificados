@@ -2,6 +2,7 @@ using FluentResults;
 using GeradorCertificado.Aplicacao.Modulos.GeracaoCertificados.Mensageria;
 using GeradorCertificado.Aplicacao.Modulos.GeracaoCertificados.Util;
 using GeradorCertificado.Dominio.Compartilhado;
+using GeradorCertificado.Dominio.Modulos.Alunos;
 using GeradorCertificado.Dominio.Modulos.Cursos;
 using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.Certificados;
 using GeradorCertificado.Dominio.Modulos.GeracaoCertificados.SolicitacaoCertificados;
@@ -22,6 +23,7 @@ public sealed record SolicitarGeracaoCertificadosCommand(
 public sealed class SolicitarGeracaoCertificadosCommandHandler(
     IRepositorioCurso repositorioCurso,
     IRepositorioSolicitacaoCertificado repositorioSolicitacao,
+    IRepositorioAluno repositorioAluno,
     IPublishEndpoint publishEndpoint
 ) : IRequestHandler<SolicitarGeracaoCertificadosCommand, Result<Guid>>
 {
@@ -50,14 +52,24 @@ public sealed class SolicitarGeracaoCertificadosCommandHandler(
 
         var solicitacaoId = Guid.CreateVersion7();
 
-        List<Certificado> certificados = command.Alunos
-            .Select(aluno => new Certificado(
+        List<string> nomes = command.Alunos
+            .Select(aluno => Aluno.NormalizarNome(aluno.Nome))
+            .ToList();
+
+        Dictionary<string, Aluno> alunosPorNome = new(StringComparer.OrdinalIgnoreCase);
+
+        foreach (string nome in nomes.Distinct(StringComparer.OrdinalIgnoreCase))
+            alunosPorNome[nome] = await ObterOuCadastrarAlunoAsync(nome, cancellationToken);
+
+        List<Certificado> certificados = nomes
+            .Select(nome => new Certificado(
                 Guid.CreateVersion7(),
-                aluno.Nome,
+                nome,
                 StatusCertificado.Pendente,
                 caminhoArquivo: null,
                 dataGeracao: null,
-                solicitacaoId
+                solicitacaoId,
+                alunosPorNome[nome].Id
             ))
             .ToList();
 
@@ -76,6 +88,34 @@ public sealed class SolicitarGeracaoCertificadosCommandHandler(
         );
 
         return Result.Ok(solicitacao.Id);
+    }
+
+    /// <summary>
+    /// O aluno é identificado pelo nome (sem diferenciar maiúsculas/minúsculas): se já existe,
+    /// os novos certificados ficam ligados a ele; senão, ele é gravado agora.
+    /// </summary>
+    private async Task<Aluno> ObterOuCadastrarAlunoAsync(string nome, CancellationToken cancellationToken)
+    {
+        var existente = await repositorioAluno.SelecionarPorNomeAsync(nome, cancellationToken);
+
+        if (existente is not null)
+            return existente;
+
+        var novo = new Aluno(Guid.CreateVersion7(), nome);
+
+        try
+        {
+            await repositorioAluno.CadastrarAsync(novo, cancellationToken);
+
+            return novo;
+        }
+        catch (ConflitoDePersistenciaException)
+        {
+            var criadoEmParalelo = await repositorioAluno.SelecionarPorNomeAsync(nome, cancellationToken);
+
+            return criadoEmParalelo
+                ?? throw new InvalidOperationException($"Não foi possível gravar o aluno \"{nome}\".");
+        }
     }
 
     private static IReadOnlyList<ErroValidacao> Validar(SolicitarGeracaoCertificadosCommand command)
