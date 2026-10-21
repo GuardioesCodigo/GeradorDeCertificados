@@ -40,6 +40,25 @@ export class AuthService {
     );
   }
 
+  /**
+   * Indica se há uma sessão ativa e não expirada. Se o token expirou com o app aberto,
+   * a sessão é descartada aqui (sem navegar), para os guards decidirem o redirecionamento.
+   */
+  sessaoEstaValida(): boolean {
+    const sessao = this.sessaoState();
+
+    if (!sessao) return false;
+
+    const expiracao = new Date(sessao.token.dataExpiracaoEmUtc).getTime();
+
+    if (Number.isFinite(expiracao) && expiracao > Date.now()) return true;
+
+    localStorage.removeItem(this.chaveArmazenamento);
+    this.sessaoState.set(null);
+
+    return false;
+  }
+
   encerrarSessao(): void {
     localStorage.removeItem(this.chaveArmazenamento);
     this.sessaoState.set(null);

@@ -7,8 +7,8 @@ namespace GeradorCertificado.Infra.Modulos.GeracaoCertificados.Servicos;
 
 public sealed class GeradorDeCertificadoPdfComQuestPdf : IGeradorDeCertificadoPdf
 {
-    private const string CorFundo = "#8FA0B5";   // azul-marinho acinzentado
-    private const string CorBorda = "#1B2A49";   // azul-marinho escuro
+    private const string CorFundo = "#66768E";   // cinza com azul-marinho
+    private const string CorBorda = "#0B1730";   // azul-marinho escuro
 
     static GeradorDeCertificadoPdfComQuestPdf()
     {

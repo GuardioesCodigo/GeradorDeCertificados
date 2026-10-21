@@ -120,6 +120,10 @@ Observações sobre a integração com a API atual:
   terminar, mostrando o progresso e o estado de cada certificado. Com o status `Concluido`, o botão
   "Baixar ZIP" usa `GET /cursos/{id}/certificados/download`. Enquanto há processamento em andamento
   a API recusa (409) uma nova solicitação para o mesmo curso, e o client desabilita o botão.
+- **Guarda de rotas**: `/cursos/**` exige sessão válida; sem ela o client redireciona para
+  `/auth/login?returnUrl=...` e volta à página pedida após o login. Quem já está logado é enviado
+  de `/auth/**` para `/cursos`. Se a API responder 401 em uma chamada autenticada, a sessão é
+  encerrada e o usuário volta ao login.
 - **Listagem de cursos**: a API ainda não tem `GET /cursos`. A tela "Meus cursos" usa os ids dos
   cursos cadastrados pelo próprio usuário neste navegador e carrega cada um com
   `GET /cursos/{id}`. Quando a listagem existir na API, troque o corpo de `listar()` em

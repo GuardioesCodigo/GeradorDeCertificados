@@ -3,6 +3,7 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/
 import { provideRouter, Routes } from '@angular/router';
 
 import { environment } from '../environments/environment';
+import { autenticadoGuard, visitanteGuard } from './auth/auth.guard';
 import { authInterceptor } from './auth/auth.interceptor';
 import { CHAVE_ARMAZENAMENTO, URL_API } from './auth/auth.tokens';
 
@@ -13,6 +14,7 @@ const routes: Routes = [
   },
   {
     path: 'auth',
+    canActivate: [visitanteGuard],
     loadComponent: () => import('./auth/shell/auth-shell').then((c) => c.AuthShell),
     children: [
       {
@@ -27,6 +29,8 @@ const routes: Routes = [
   },
   {
     path: 'cursos',
+    canActivate: [autenticadoGuard],
+    canActivateChild: [autenticadoGuard],
     loadComponent: () => import('./cursos/shell/cursos-shell').then((c) => c.CursosShell),
     children: [
       { path: '', redirectTo: 'listar', pathMatch: 'full' },

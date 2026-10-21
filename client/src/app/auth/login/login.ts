@@ -3,7 +3,7 @@ import { Observer } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { afterNextRender, Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { email, form, FormField, minLength, required } from '@angular/forms/signals';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LucideArrowRight } from '@lucide/angular';
 
 import {
@@ -27,6 +27,7 @@ interface LoginFormModel {
 export class Login {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly modeloLogin = signal<LoginFormModel>({ email: '', senha: '' });
   protected readonly formularioLogin = form(this.modeloLogin, (modelo) => {
@@ -85,7 +86,7 @@ export class Login {
       next: () => {
         this.enviandoFormulario.set(false);
 
-        void this.router.navigateByUrl('/');
+        void this.router.navigateByUrl(this.obterUrlDeRetorno());
       },
       error: (response: HttpErrorResponse) => {
         this.enviandoFormulario.set(false);
@@ -100,6 +101,13 @@ export class Login {
     };
 
     this.authService.login(requisicao).subscribe(observer);
+  }
+
+  /** Só aceita caminhos internos (começando com uma única "/") para evitar redirecionamento externo. */
+  private obterUrlDeRetorno(): string {
+    const retorno = this.route.snapshot.queryParamMap.get('returnUrl');
+
+    return retorno && retorno.startsWith('/') && !retorno.startsWith('//') ? retorno : '/';
   }
 
   private obterMensagemErroApi(response: HttpErrorResponse): string {
