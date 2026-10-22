@@ -110,38 +110,37 @@ jobs:
           --output ./publish
 
       
+      
       - name: Copiar Angular para wwwroot
         shell: pwsh
         run: |
           $source = Join-Path $env:GITHUB_WORKSPACE "client/dist/gerador-certificados/browser"
-          $destination = Join-Path $env:GITHUB_WORKSPACE "publish/wwwroot"
+          $publish = Join-Path $env:GITHUB_WORKSPACE "publish"
+          $destination = Join-Path $publish "wwwroot"
 
-          Write-Host "Origem: $source"
-          Write-Host "Destino: $destination"
-
-          if (-not (Test-Path -LiteralPath $source -PathType Container)) {
-            Get-ChildItem "client/dist" -Recurse -ErrorAction SilentlyContinue
-            throw "Diretório de build Angular não encontrado."
+          if (-not (Test-Path -LiteralPath (Join-Path $source "index.html") -PathType Leaf)) {
+            throw "Build Angular não encontrado: $source"
           }
 
-          Get-ChildItem -LiteralPath $source -Force
+          # Corrige o conflito se wwwroot tiver sido gerado como arquivo.
+          if (Test-Path -LiteralPath $destination -PathType Leaf) {
+            Remove-Item -LiteralPath $destination -Force
+          }
 
           New-Item -ItemType Directory -Path $destination -Force | Out-Null
 
-          Get-ChildItem -LiteralPath $source -Force | ForEach-Object {
-            Copy-Item -LiteralPath $_.FullName -Destination $destination -Recurse -Force
+          Copy-Item `
+            -Path (Join-Path $source "*") `
+            -Destination $destination `
+            -Recurse `
+            -Force
+
+          if (-not (Test-Path -LiteralPath (Join-Path $destination "index.html") -PathType Leaf)) {
+            throw "index.html não foi copiado para $destination"
           }
 
-          Write-Host "Conteúdo copiado:"
-          Get-ChildItem -LiteralPath $destination -Force -Recurse
-
-          $index = Join-Path $destination "index.html"
-
-          if (-not (Test-Path -LiteralPath $index -PathType Leaf)) {
-            throw "index.html não foi encontrado no destino: $destination"
-          }
-
-          Write-Host "Angular copiado com sucesso."
+          Write-Host "Angular publicado em $destination"
+          Get-ChildItem -LiteralPath $destination
 
       - name: Upload application
         uses: actions/upload-artifact@v4
