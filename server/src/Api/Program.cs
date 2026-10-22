@@ -427,6 +427,7 @@ catch (Exception ex)
 // PIPELINE HTTP
 // ============================================================
 
+
 app.UseExceptionHandler();
 
 app.UseStatusCodePages();
@@ -435,16 +436,18 @@ app.UseHttpsRedirection();
 
 app.UseCors("Client");
 
-app.UseAuthentication();
-
-app.UseAuthorization();
-
+// Arquivos públicos do Angular devem ser servidos antes da autorização.
 app.UseDefaultFiles();
 app.UseStaticFiles();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 
 app.MapFallbackToFile("index.html");
+
+
 
 // ============================================================
 // START
