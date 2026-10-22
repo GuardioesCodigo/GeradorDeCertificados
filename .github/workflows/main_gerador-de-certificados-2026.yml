@@ -84,7 +84,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "22.22.3"
           cache: npm
           cache-dependency-path: client/package-lock.json
 
@@ -109,20 +109,46 @@ jobs:
           --no-restore
           --output ./publish
 
+      - name: Copiar Angular para wwwroot
+        shell: pwsh
+        run: |
+          $source = "client/dist/gerador-certificados/browser"
+          $destination = "publish/wwwroot"
+
+          if (-not (Test-Path "$source/index.html")) {
+            throw "Build Angular inválido: index.html não encontrado em $source"
+          }
+
+          New-Item -ItemType Directory -Path $destination -Force | Out-Null
+          Copy-Item "$source/*" -Destination $destination -Recurse -Force
+          if (-not (Test-Path "$destination/index.html")) {
+            throw "Falha ao copiar o Angular para wwwroot"
+          }
+
+      - name: Upload application
+        uses: actions/upload-artifact@v4
+        with:
+          name: webapp
+          path: ./publish
+
+           
       - name: Integrar front-end ao pacote da API
         shell: pwsh
         run: |
-          $distPath = Join-Path $PWD "client/dist"
+          $frontendPath = Join-Path $PWD "client/dist/gerador-certificados/browser"
+          $wwwroot = Join-Path $PWD "publish/wwwroot"
 
-          if (-not (Test-Path $distPath)) {
-            throw "A compilação Angular não gerou a pasta client/dist."
+          if (-not (Test-Path (Join-Path $frontendPath "index.html"))) {
+            throw "Build Angular inválido: index.html não encontrado em $frontendPath"
           }
 
-          $indexFiles = @(Get-ChildItem $distPath -Filter "index.html" -Recurse -File)
+          New-Item -ItemType Directory -Path $wwwroot -Force | Out-Null
 
-          if ($indexFiles.Count -eq 0) {
-            throw "index.html não encontrado no resultado da compilação Angular."
-          }
+          Copy-Item `
+            -Path "$frontendPath/*" `
+            -Destination $wwwroot `
+            -Recurse `
+            -Force
 
           $browserIndex = $indexFiles |
             Where-Object { $_.Directory.Name -eq "browser" } |
@@ -145,16 +171,10 @@ jobs:
             -Force
 
           if (-not (Test-Path (Join-Path $wwwroot "index.html"))) {
-            throw "O index.html não foi copiado para publish/wwwroot."
+            throw "O frontend não foi integrado ao pacote publicado"
           }
 
-          Write-Host "Front-end integrado: $frontendPath"
-          Write-Host "Pacote final: $wwwroot"
-      - name: Upload application
-        uses: actions/upload-artifact@v4
-        with:
-          name: webapp
-          path: ./publish
+          Write-Host "Angular integrado com sucesso em $wwwroot"
 
   # 3. Migrações do SQL Server
   migrate:
