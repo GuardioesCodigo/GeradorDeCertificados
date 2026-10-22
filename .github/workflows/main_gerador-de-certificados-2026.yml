@@ -111,36 +111,38 @@ jobs:
 
       
       
+      
       - name: Copiar Angular para wwwroot
         shell: pwsh
         run: |
-          $source = Join-Path $env:GITHUB_WORKSPACE "client/dist/gerador-certificados/browser"
-          $publish = Join-Path $env:GITHUB_WORKSPACE "publish"
-          $destination = Join-Path $publish "wwwroot"
+          $frontendPath = Join-Path $env:GITHUB_WORKSPACE "client/dist/gerador-certificados/browser"
+          $publishPath = Join-Path $env:GITHUB_WORKSPACE "publish"
+          $wwwrootPath = Join-Path $publishPath "wwwroot"
 
-          if (-not (Test-Path -LiteralPath (Join-Path $source "index.html") -PathType Leaf)) {
-            throw "Build Angular não encontrado: $source"
+          $indexPath = Join-Path $frontendPath "index.html"
+
+          if (-not (Test-Path -LiteralPath $indexPath -PathType Leaf)) {
+            throw "Angular não compilado. index.html esperado em: $indexPath"
           }
 
-          # Corrige o conflito se wwwroot tiver sido gerado como arquivo.
-          if (Test-Path -LiteralPath $destination -PathType Leaf) {
-            Remove-Item -LiteralPath $destination -Force
+          # Remove eventual arquivo chamado wwwroot criado pelo publish.
+          if (Test-Path -LiteralPath $wwwrootPath -PathType Leaf) {
+            Remove-Item -LiteralPath $wwwrootPath -Force
           }
 
-          New-Item -ItemType Directory -Path $destination -Force | Out-Null
+          New-Item -ItemType Directory -Path $wwwrootPath -Force | Out-Null
 
           Copy-Item `
-            -Path (Join-Path $source "*") `
-            -Destination $destination `
+            -Path (Join-Path $frontendPath "*") `
+            -Destination $wwwrootPath `
             -Recurse `
             -Force
 
-          if (-not (Test-Path -LiteralPath (Join-Path $destination "index.html") -PathType Leaf)) {
-            throw "index.html não foi copiado para $destination"
+          if (-not (Test-Path -LiteralPath (Join-Path $wwwrootPath "index.html") -PathType Leaf)) {
+            throw "A cópia do Angular falhou: index.html ausente em $wwwrootPath"
           }
 
-          Write-Host "Angular publicado em $destination"
-          Get-ChildItem -LiteralPath $destination
+          Write-Host "Angular copiado para $wwwrootPath"
 
       - name: Upload application
         uses: actions/upload-artifact@v4
@@ -170,12 +172,6 @@ jobs:
           $browserIndex = $indexFiles |
             Where-Object { $_.Directory.Name -eq "browser" } |
             Select-Object -First 1
-
-          if ($browserIndex) {
-            $frontendPath = $browserIndex.Directory.FullName
-          } else {
-            $frontendPath = $indexFiles[0].Directory.FullName
-          }
 
           $wwwroot = Join-Path $PWD "publish/wwwroot"
 
