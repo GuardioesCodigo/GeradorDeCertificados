@@ -109,21 +109,39 @@ jobs:
           --no-restore
           --output ./publish
 
+      
       - name: Copiar Angular para wwwroot
         shell: pwsh
         run: |
-          $source = "client/dist/gerador-certificados/browser"
-          $destination = "publish/wwwroot"
+          $source = Join-Path $env:GITHUB_WORKSPACE "client/dist/gerador-certificados/browser"
+          $destination = Join-Path $env:GITHUB_WORKSPACE "publish/wwwroot"
 
-          if (-not (Test-Path "$source/index.html")) {
-            throw "Build Angular inválido: index.html não encontrado em $source"
+          Write-Host "Origem: $source"
+          Write-Host "Destino: $destination"
+
+          if (-not (Test-Path -LiteralPath $source -PathType Container)) {
+            Get-ChildItem "client/dist" -Recurse -ErrorAction SilentlyContinue
+            throw "Diretório de build Angular não encontrado."
           }
+
+          Get-ChildItem -LiteralPath $source -Force
 
           New-Item -ItemType Directory -Path $destination -Force | Out-Null
-          Copy-Item "$source/*" -Destination $destination -Recurse -Force
-          if (-not (Test-Path "$destination/index.html")) {
-            throw "Falha ao copiar o Angular para wwwroot"
+
+          Get-ChildItem -LiteralPath $source -Force | ForEach-Object {
+            Copy-Item -LiteralPath $_.FullName -Destination $destination -Recurse -Force
           }
+
+          Write-Host "Conteúdo copiado:"
+          Get-ChildItem -LiteralPath $destination -Force -Recurse
+
+          $index = Join-Path $destination "index.html"
+
+          if (-not (Test-Path -LiteralPath $index -PathType Leaf)) {
+            throw "index.html não foi encontrado no destino: $destination"
+          }
+
+          Write-Host "Angular copiado com sucesso."
 
       - name: Upload application
         uses: actions/upload-artifact@v4
